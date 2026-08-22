@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Bell,
@@ -14,6 +14,12 @@ import {
   Sparkles,
   ChevronDown,
   Layers,
+  Clock,
+  CreditCard,
+  CalendarDays,
+  X,
+  ArrowRight,
+  HelpCircle,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { useHRMS } from "@/context/hrms-context";
@@ -29,16 +35,47 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { formatDate } from "@/lib/utils";
 
-interface NavbarProps {
-  onOpenSearch?: () => void;
-}
-
-export function Navbar({ onOpenSearch }: NavbarProps) {
-  const { user, role, logout, switchUser, availableUsers, isHrAdmin } = useAuth();
+export function Navbar() {
+  const { user, role, logout, switchRole, isHrAdmin } = useAuth();
   const { notifications, unreadNotificationCount, markAllNotificationsAsRead, isCheckedIn } = useHRMS();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Keyboard shortcut Ctrl+K / Cmd+K for Global Search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  const searchItems = [
+    { title: "My Profile & Documents", href: "/profile", category: "Navigation", icon: User },
+    { title: "Attendance Tracker & Live Check-In", href: "/attendance", category: "Navigation", icon: Clock },
+    { title: "Leaves & Smart Leave Planner", href: "/leaves", category: "Navigation", icon: CalendarDays },
+    { title: "Workforce & Team Calendar", href: "/calendar", category: "Navigation", icon: Calendar },
+    { title: "Payroll & Salary Structure (₹ INR)", href: "/payroll", category: "Navigation", icon: CreditCard },
+    ...(isHrAdmin ? [{ title: "Admin Command Center", href: "/admin", category: "Admin", icon: ShieldCheck }] : []),
+  ];
+
+  const filteredSearch = searchItems.filter((item) =>
+    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const getRoleBadgeVariant = (r: string) => {
     switch (r) {
@@ -54,7 +91,7 @@ export function Navbar({ onOpenSearch }: NavbarProps) {
   };
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-border/70 bg-background/80 px-4 md:px-6 backdrop-blur-md transition-all">
+    <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-border/80 bg-background/85 px-4 md:px-6 backdrop-blur-xl transition-all">
       {/* Left side: Logo & Tagline */}
       <div className="flex items-center gap-3">
         <Link href="/" className="flex items-center gap-2.5 group">
@@ -62,13 +99,13 @@ export function Navbar({ onOpenSearch }: NavbarProps) {
             <Sparkles className="h-5 w-5" />
           </div>
           <div className="flex flex-col">
-            <span className="font-bold text-lg leading-tight tracking-tight text-zinc-900 dark:text-zinc-50 flex items-center gap-1.5">
+            <span className="font-extrabold text-lg leading-tight tracking-tight text-foreground flex items-center gap-1.5">
               Dayflow
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-950/60 px-1.5 py-0.2 rounded-full">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 bg-purple-500/10 px-1.5 py-0.2 rounded-md">
                 HRMS
               </span>
             </span>
-            <span className="hidden md:inline-block text-[11px] text-muted-foreground tracking-tight -mt-0.5">
+            <span className="hidden md:inline-block text-[10.5px] text-muted-foreground tracking-tight -mt-0.5">
               Every workday, perfectly aligned.
             </span>
           </div>
@@ -83,17 +120,17 @@ export function Navbar({ onOpenSearch }: NavbarProps) {
         </div>
       </div>
 
-      {/* Center / Search Trigger */}
+      {/* Center: Global Search Trigger */}
       <div className="flex items-center gap-2">
         <Button
           variant="outline"
           size="sm"
-          onClick={onOpenSearch}
-          className="hidden sm:flex h-9 w-64 items-center justify-between rounded-xl bg-muted/40 px-3 text-xs text-muted-foreground hover:bg-muted hover:border-purple-500/30 transition-all"
+          onClick={() => setSearchOpen(true)}
+          className="hidden sm:flex h-9 w-60 md:w-72 items-center justify-between rounded-xl bg-muted/40 px-3 text-xs text-muted-foreground hover:bg-muted/80 hover:border-purple-500/30 transition-all border-border/70"
         >
           <div className="flex items-center gap-2">
             <Search className="h-3.5 w-3.5 text-muted-foreground" />
-            <span>Search employees, actions...</span>
+            <span>Search modules, actions...</span>
           </div>
           <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-border bg-background px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
             <span className="text-xs">⌘</span>K
@@ -103,13 +140,13 @@ export function Navbar({ onOpenSearch }: NavbarProps) {
 
       {/* Right side controls */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Quick Role Switcher Dropdown for Dhruv Singh */}
+        {/* Role Switcher Pill for Dhruv Singh */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
               size="sm"
-              className="h-9 px-2.5 text-xs font-medium gap-1.5 rounded-xl border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 text-purple-700 dark:text-purple-300"
+              className="h-8 px-2.5 text-xs font-medium gap-1.5 rounded-xl border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 text-purple-700 dark:text-purple-300"
             >
               <Layers className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
               <span className="hidden sm:inline">Role:</span>
@@ -153,12 +190,12 @@ export function Navbar({ onOpenSearch }: NavbarProps) {
             <Button
               variant="ghost"
               size="icon-sm"
-              className="relative h-9 w-9 rounded-full border border-border/50 text-foreground hover:bg-accent"
+              className="relative h-8.5 w-8.5 rounded-full border border-border/60 text-foreground hover:bg-accent"
               aria-label="Notifications"
             >
               <Bell className="h-4 w-4" />
               {unreadNotificationCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#F97316] text-[9px] font-bold text-white shadow-sm ring-2 ring-background animate-pulse">
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-orange-500 text-[9px] font-bold text-white shadow-sm ring-2 ring-background animate-pulse">
                   {unreadNotificationCount}
                 </span>
               )}
@@ -212,7 +249,7 @@ export function Navbar({ onOpenSearch }: NavbarProps) {
                         {formatDate(n.timestamp)}
                       </span>
                     </div>
-                    {!n.read && <div className="h-2 w-2 rounded-full bg-[#F97316] shrink-0 mt-1" />}
+                    {!n.read && <div className="h-2 w-2 rounded-full bg-orange-500 shrink-0 mt-1" />}
                   </div>
                 ))
               )}
@@ -228,14 +265,14 @@ export function Navbar({ onOpenSearch }: NavbarProps) {
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="relative h-9 rounded-full pl-2 pr-1 gap-2 hover:bg-accent border border-border/50"
+              className="relative h-8.5 rounded-full pl-2 pr-1 gap-2 hover:bg-accent border border-border/60"
             >
-              <Avatar className="h-7 w-7">
-                <AvatarImage src={user?.avatar_url} alt={user?.display_name} />
-                <AvatarFallback>{user?.first_name?.[0] || "U"}</AvatarFallback>
+              <Avatar className="h-6.5 w-6.5 ring-1 ring-purple-500/30">
+                <AvatarImage src={user?.avatar_url} alt="Dhruv Singh" />
+                <AvatarFallback className="text-[10px] bg-purple-600 text-white font-bold">DS</AvatarFallback>
               </Avatar>
-              <span className="hidden md:inline-block text-xs font-medium text-foreground max-w-[100px] truncate">
-                {user?.first_name}
+              <span className="hidden md:inline-block text-xs font-semibold text-foreground max-w-[100px] truncate">
+                Dhruv
               </span>
               <ChevronDown className="h-3 w-3 opacity-60 hidden md:inline-block" />
             </Button>
@@ -243,8 +280,8 @@ export function Navbar({ onOpenSearch }: NavbarProps) {
           <DropdownMenuContent align="end" className="w-56 glass-panel">
             <DropdownMenuLabel className="font-normal p-3">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-semibold leading-none">{user?.display_name}</p>
-                <p className="text-xs leading-none text-muted-foreground">{user?.work_email}</p>
+                <p className="text-sm font-bold leading-none">{user?.display_name || "Dhruv Singh"}</p>
+                <p className="text-xs leading-none text-muted-foreground">{user?.work_email || "dhruv.singh@dayflow.io"}</p>
                 <div className="pt-1">
                   <Badge variant={getRoleBadgeVariant(role) as any} className="text-[10px]">
                     {role.replace("_", " ")}
@@ -270,7 +307,7 @@ export function Navbar({ onOpenSearch }: NavbarProps) {
             <DropdownMenuItem asChild className="cursor-pointer">
               <Link href="/attendance" className="flex items-center gap-2">
                 <Building2 className="h-4 w-4" />
-                <span>Attendance</span>
+                <span>Attendance Tracker</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild className="cursor-pointer">
@@ -290,6 +327,47 @@ export function Navbar({ onOpenSearch }: NavbarProps) {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Interactive Global Search Modal */}
+      {searchOpen && (
+        <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
+          <DialogContent className="max-w-lg glass-panel p-0 overflow-hidden">
+            <div className="p-4 border-b border-border/60 flex items-center gap-2.5">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                autoFocus
+                placeholder="Search pages, actions, policies, payslips..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="border-0 focus-visible:ring-0 text-sm shadow-none p-0 h-8"
+              />
+            </div>
+            <div className="max-h-72 overflow-y-auto p-2 divide-y divide-border/40">
+              {filteredSearch.map((item, idx) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={idx}
+                    href={item.href}
+                    onClick={() => setSearchOpen(false)}
+                    className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/60 transition-colors text-xs"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                        <Icon className="h-3.5 w-3.5" />
+                      </div>
+                      <span className="font-semibold text-foreground">{item.title}</span>
+                    </div>
+                    <Badge variant="outline" className="text-[10px]">
+                      {item.category}
+                    </Badge>
+                  </Link>
+                );
+              })}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </header>
   );
 }

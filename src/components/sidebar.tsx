@@ -128,7 +128,7 @@ export function Sidebar() {
   ];
 
   return (
-    <aside className="hidden md:flex h-[calc(100vh-4rem)] w-64 flex-col justify-between border-r border-border/80 bg-card/60 backdrop-blur-xl p-3.5 text-foreground sticky top-16 select-none overflow-y-auto">
+    <aside className="hidden md:flex h-[calc(100vh-4rem)] w-64 flex-col justify-between border-r border-border/80 bg-card/70 backdrop-blur-xl p-3.5 text-foreground sticky top-16 overflow-y-auto z-20">
       <div className="flex flex-col gap-5">
         {/* Organization / Tenant Capsule */}
         <div className="rounded-2xl border border-border/70 bg-muted/40 p-3 flex items-center justify-between shadow-xs">
@@ -165,7 +165,7 @@ export function Sidebar() {
                     key={item.href}
                     href={item.href}
                     prefetch={true}
-                    className={`group flex items-center justify-between rounded-xl px-2.5 py-2 text-xs font-medium transition-all ${
+                    className={`group flex items-center justify-between rounded-xl px-2.5 py-2 text-xs font-medium transition-all cursor-pointer ${
                       isActive
                         ? "bg-purple-600 text-white shadow-sm shadow-purple-600/25 font-semibold"
                         : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
@@ -214,7 +214,7 @@ export function Sidebar() {
             onClick={toggleCheckIn}
             variant={isCheckedIn ? "destructive" : "purple"}
             size="sm"
-            className="w-full text-xs font-semibold gap-1.5 rounded-xl shadow-xs h-8"
+            className="w-full text-xs font-semibold gap-1.5 rounded-xl shadow-xs h-8 cursor-pointer"
           >
             {isCheckedIn ? (
               <>
@@ -233,7 +233,7 @@ export function Sidebar() {
         <button
           type="button"
           onClick={logout}
-          className="w-full flex items-center justify-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-red-500 py-1 transition-colors rounded-lg hover:bg-red-500/5"
+          className="w-full flex items-center justify-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-red-500 py-1 transition-colors rounded-lg hover:bg-red-500/5 cursor-pointer"
         >
           <LogOut className="h-3 w-3" />
           <span>Sign Out</span>

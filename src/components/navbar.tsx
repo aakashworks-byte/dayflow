@@ -44,7 +44,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { formatDate } from "@/lib/utils";
 
-export function Navbar() {
+interface NavbarProps {
+  onOpenSearch?: () => void;
+}
+
+export function Navbar({ onOpenSearch }: NavbarProps = {}) {
   const { user, role, logout, switchRole, isHrAdmin } = useAuth();
   const { notifications, unreadNotificationCount, markAllNotificationsAsRead, isCheckedIn } = useHRMS();
   const [showNotifications, setShowNotifications] = useState(false);
@@ -125,7 +129,7 @@ export function Navbar() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setSearchOpen(true)}
+          onClick={() => (onOpenSearch ? onOpenSearch() : setSearchOpen(true))}
           className="hidden sm:flex h-9 w-60 md:w-72 items-center justify-between rounded-xl bg-muted/40 px-3 text-xs text-muted-foreground hover:bg-muted/80 hover:border-purple-500/30 transition-all border-border/70"
         >
           <div className="flex items-center gap-2">

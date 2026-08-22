@@ -205,24 +205,24 @@ export default function ProfilePage() {
 
       {/* Main Profile Header Card */}
       <Card className="border border-border/80 shadow-md rounded-3xl overflow-hidden backdrop-blur-xl bg-card/90">
-        <div className="h-32 bg-gradient-to-r from-purple-700 via-indigo-600 to-orange-500 relative">
-          <div className="absolute top-4 right-4 flex items-center gap-2">
-            <Badge variant="purple" className="bg-white/20 text-white border-transparent backdrop-blur-sm">
+        <div className="h-24 sm:h-28 bg-gradient-to-r from-purple-700 via-indigo-600 to-orange-500 relative">
+          <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-2">
+            <Badge variant="purple" className="bg-white/20 text-white border-transparent backdrop-blur-sm text-[10px]">
               Full Time • Permanent
             </Badge>
-            <Badge variant="success" className="backdrop-blur-sm">
+            <Badge variant="success" className="backdrop-blur-sm text-[10px]">
               Active Employee
             </Badge>
           </div>
         </div>
 
-        <CardContent className="px-6 sm:px-8 pb-6 pt-0 relative">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 -mt-16 sm:-mt-14 mb-4">
-            {/* Large Circular Avatar with Click-to-Upload Trigger */}
-            <div className="relative group">
-              <Avatar className="h-28 w-28 sm:h-32 sm:w-32 ring-4 ring-background shadow-2xl rounded-full cursor-pointer overflow-hidden">
-                <AvatarImage src={formData.avatar_url || activeEmployee.avatar_url} alt="Dhruv Singh" className="object-cover" />
-                <AvatarFallback className="text-2xl font-bold bg-purple-600 text-white">
+        <CardContent className="px-5 sm:px-8 pb-6 pt-0 relative">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 -mt-10 sm:-mt-12 mb-4">
+            {/* Circular Avatar with Click-to-Upload Trigger */}
+            <div className="relative group shrink-0">
+              <Avatar className="h-20 w-20 sm:h-24 sm:w-24 ring-4 ring-background shadow-xl rounded-full cursor-pointer overflow-hidden aspect-square">
+                <AvatarImage src={formData.avatar_url || activeEmployee.avatar_url} alt="Dhruv Singh" className="object-cover h-full w-full rounded-full" />
+                <AvatarFallback className="text-xl font-bold bg-purple-600 text-white">
                   DS
                 </AvatarFallback>
               </Avatar>
@@ -231,10 +231,10 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute bottom-1 right-1 flex h-9 w-9 items-center justify-center rounded-full bg-purple-600 text-white shadow-xl transition-all duration-200 hover:scale-110 hover:bg-purple-700 active:scale-95 ring-2 ring-background"
+                className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-purple-600 text-white shadow-md transition-all duration-200 hover:scale-110 hover:bg-purple-700 active:scale-95 ring-2 ring-background"
                 title="Click to upload profile photo from your device"
               >
-                <Camera className="h-4 w-4" />
+                <Camera className="h-3.5 w-3.5" />
               </button>
             </div>
 

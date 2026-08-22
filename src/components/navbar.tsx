@@ -265,10 +265,10 @@ export function Navbar() {
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="relative h-8.5 rounded-full pl-2 pr-1 gap-2 hover:bg-accent border border-border/60"
+              className="relative h-9 rounded-full pl-1.5 pr-2.5 gap-2 hover:bg-accent border border-border/60 shrink-0"
             >
-              <Avatar className="h-6.5 w-6.5 ring-1 ring-purple-500/30">
-                <AvatarImage src={user?.avatar_url} alt="Dhruv Singh" />
+              <Avatar className="h-7 w-7 min-h-7 min-w-7 max-h-7 max-w-7 ring-1 ring-purple-500/30 overflow-hidden shrink-0">
+                <AvatarImage src={user?.avatar_url} alt="Dhruv Singh" className="h-full w-full object-cover" />
                 <AvatarFallback className="text-[10px] bg-purple-600 text-white font-bold">DS</AvatarFallback>
               </Avatar>
               <span className="hidden md:inline-block text-xs font-semibold text-foreground max-w-[100px] truncate">

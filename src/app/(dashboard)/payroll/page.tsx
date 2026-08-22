@@ -14,6 +14,10 @@ import {
   Printer,
   ShieldCheck,
   Eye,
+  CalendarDays,
+  Percent,
+  Receipt,
+  FileCheck,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { useHRMS } from "@/context/hrms-context";
@@ -46,11 +50,27 @@ export default function PayrollPage() {
   const { payslips } = useHRMS();
   const { toast } = useToast();
 
+  const [selectedFY, setSelectedFY] = useState("FY 2026-27");
   const [selectedPayslip, setSelectedPayslip] = useState<Payslip | null>(payslips[0]);
   const [showSlipModal, setShowSlipModal] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
   const salary = user?.salary_structure || payslips[0].structure;
+
+  // Indian Financial Year Calculations (April 2026 – March 2027)
+  const annualGrossCTC = salary.gross_earnings * 12;
+  const annualNetSalary = salary.net_salary * 12;
+  const annualTaxTDS = salary.income_tax_tds * 12;
+  const annualPF = salary.provident_fund * 12;
+  const annualPT = salary.professional_tax * 12;
+  const totalAnnualDeductions = salary.total_deductions * 12;
+
+  // YTD (Year To Date: April, May, June, July = 4 Months)
+  const ytdMonthsCount = 4;
+  const ytdGross = salary.gross_earnings * ytdMonthsCount;
+  const ytdNet = salary.net_salary * ytdMonthsCount;
+  const ytdDeductions = salary.total_deductions * ytdMonthsCount;
+  const ytdTDS = salary.income_tax_tds * ytdMonthsCount;
 
   // Direct PDF Download Handler
   const handleDownloadDirectPDF = (slip: Payslip) => {
@@ -59,13 +79,13 @@ export default function PayrollPage() {
       generatePayslipPDF(slip, user);
       toast({
         title: "Salary Slip Downloaded! 📄",
-        description: `Official PDF for ${slip.month} has been saved to your downloads.`,
+        description: `Official PDF for ${slip.month} (${selectedFY}) has been saved to your computer.`,
         variant: "purple",
       });
     } catch (err) {
       toast({
         title: "Download Failed",
-        description: "Please try again or use the print option.",
+        description: "Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -80,33 +100,52 @@ export default function PayrollPage() {
 
   return (
     <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
-      {/* Top Banner */}
+      {/* Top Banner with Financial Year Switcher */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/70 pb-5">
         <div>
           <div className="flex items-center gap-2">
-            <Badge variant="purple" className="text-xs px-2 py-0.5 font-semibold">
-              Compensation & Benefits
+            <Badge variant="purple" className="text-xs px-2.5 py-0.5 font-semibold">
+              Financial Year: {selectedFY}
             </Badge>
-            <span className="text-xs text-muted-foreground font-medium">Currency: Indian Rupee (₹ INR)</span>
+            <Badge variant="outline" className="text-xs">
+              AY 2027-28
+            </Badge>
+            <span className="text-xs text-muted-foreground font-medium">Currency: INR (₹)</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground mt-1 flex items-center gap-2">
-            Payroll & Salary Structure
+            Payroll & Financial Year Compensation
             <CreditCard className="h-6 w-6 text-purple-600 dark:text-purple-400" />
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-            Inspect your monthly earnings, statutory tax deductions, and download official payslips.
+            April 1, 2026 – March 31, 2027 • New Tax Regime (Section 115BAC) • Form 16 statements
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            onClick={() => handleOpenPreview(payslips[0])}
-            variant="outline"
-            className="rounded-xl text-xs sm:text-sm font-semibold gap-2 border-purple-500/30 text-purple-600 dark:text-purple-400"
-          >
-            <Eye className="h-4 w-4" />
-            View Payslip
-          </Button>
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Financial Year Selector */}
+          <div className="flex items-center gap-1.5 bg-muted/60 p-1 rounded-xl border border-border/60">
+            <span className="text-[11px] font-semibold text-muted-foreground px-2">FY:</span>
+            {["FY 2026-27", "FY 2025-26"].map((fy) => (
+              <button
+                key={fy}
+                onClick={() => {
+                  setSelectedFY(fy);
+                  toast({
+                    title: `Switched to ${fy}`,
+                    description: `Displaying payroll statements for ${fy}.`,
+                    variant: "purple",
+                  });
+                }}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all ${
+                  selectedFY === fy
+                    ? "bg-purple-600 text-white shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {fy}
+              </button>
+            ))}
+          </div>
 
           <Button
             onClick={() => handleDownloadDirectPDF(payslips[0])}
@@ -115,9 +154,48 @@ export default function PayrollPage() {
             disabled={isDownloading}
           >
             <Download className="h-4 w-4" />
-            {isDownloading ? "Generating..." : "Download Salary Slip (PDF)"}
+            {isDownloading ? "Generating..." : "Download Latest Slip (PDF)"}
           </Button>
         </div>
+      </div>
+
+      {/* Financial Year Key Metrics Cards (4 Stats) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="rounded-2xl border border-purple-500/30 bg-purple-500/5 p-4 shadow-sm">
+          <div className="flex items-center justify-between text-muted-foreground mb-1">
+            <span className="text-xs font-semibold text-purple-700 dark:text-purple-300">Annual Gross CTC (FY)</span>
+            <Building2 className="h-4 w-4 text-purple-600" />
+          </div>
+          <div className="text-2xl font-black text-foreground">{formatINR(annualGrossCTC)}</div>
+          <span className="text-[11px] text-muted-foreground mt-1 block">Cost to Company (12 Months)</span>
+        </Card>
+
+        <Card className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4 shadow-sm">
+          <div className="flex items-center justify-between text-muted-foreground mb-1">
+            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">YTD Gross Disbursed</span>
+            <TrendingUp className="h-4 w-4 text-emerald-600" />
+          </div>
+          <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{formatINR(ytdGross)}</div>
+          <span className="text-[11px] text-muted-foreground mt-1 block">Apr 2026 – Jul 2026 ({ytdMonthsCount} M)</span>
+        </Card>
+
+        <Card className="rounded-2xl border border-red-500/30 bg-red-500/5 p-4 shadow-sm">
+          <div className="flex items-center justify-between text-muted-foreground mb-1">
+            <span className="text-xs font-semibold text-red-700 dark:text-red-300">YTD Tax Deducted (TDS+PF)</span>
+            <Receipt className="h-4 w-4 text-red-500" />
+          </div>
+          <div className="text-2xl font-black text-red-600 dark:text-red-400">{formatINR(ytdDeductions)}</div>
+          <span className="text-[11px] text-muted-foreground mt-1 block">TDS: {formatINR(ytdTDS)} • PF: {formatINR(salary.provident_fund * 4)}</span>
+        </Card>
+
+        <Card className="rounded-2xl border border-blue-500/30 bg-blue-500/5 p-4 shadow-sm">
+          <div className="flex items-center justify-between text-muted-foreground mb-1">
+            <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">YTD Net Pay Deposited</span>
+            <CheckCircle2 className="h-4 w-4 text-blue-600" />
+          </div>
+          <div className="text-2xl font-black text-foreground">{formatINR(ytdNet)}</div>
+          <span className="text-[11px] text-muted-foreground mt-1 block">Credited to HDFC Bank (•••• 8842)</span>
+        </Card>
       </div>
 
       {/* Salary Structure Main Highlight Card */}
@@ -128,7 +206,7 @@ export default function PayrollPage() {
             <div>
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <span className="font-bold text-purple-600 text-lg">₹</span>
-                Monthly CTC Structure Breakdown
+                Monthly CTC Structure ({selectedFY})
               </CardTitle>
               <CardDescription className="text-xs">
                 Detailed earnings and statutory tax deductions for {user?.display_name || "Employee"} ({user?.employee_code || "EMP"})
@@ -243,56 +321,64 @@ export default function PayrollPage() {
           </CardContent>
         </Card>
 
-        {/* Right 1 Col: Statutory & Bank Details */}
+        {/* Right 1 Col: Financial Year Tax & Statutory Compliance */}
         <Card className="border border-border/70 rounded-3xl shadow-sm p-5 space-y-4 flex flex-col justify-between">
           <div>
             <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-purple-600" />
-              Statutory & Bank Records
+              <ShieldCheck className="h-4 w-4 text-purple-600" />
+              Tax Regime & Compliance ({selectedFY})
             </CardTitle>
             <CardDescription className="text-xs">
-              Banking and tax identification details
+              Direct tax computation & statutory declarations
             </CardDescription>
 
-            <div className="space-y-3 mt-4 text-xs">
+            <div className="space-y-2.5 mt-4 text-xs">
               <div className="flex justify-between p-2.5 rounded-xl bg-muted/40">
-                <span className="text-muted-foreground">Bank Name:</span>
-                <span className="font-semibold text-foreground">HDFC Bank Ltd</span>
+                <span className="text-muted-foreground">Tax Regime:</span>
+                <span className="font-bold text-purple-600 dark:text-purple-400">New Regime (Sec 115BAC)</span>
               </div>
               <div className="flex justify-between p-2.5 rounded-xl bg-muted/40">
-                <span className="text-muted-foreground">Account Number:</span>
-                <span className="font-mono font-semibold text-foreground">•••• •••• 8842</span>
+                <span className="text-muted-foreground">Standard Deduction:</span>
+                <span className="font-semibold text-foreground">₹75,000</span>
               </div>
               <div className="flex justify-between p-2.5 rounded-xl bg-muted/40">
-                <span className="text-muted-foreground">PAN Card:</span>
+                <span className="text-muted-foreground">Annual Taxable Income:</span>
+                <span className="font-semibold text-foreground">{formatINR(annualGrossCTC - 75000)}</span>
+              </div>
+              <div className="flex justify-between p-2.5 rounded-xl bg-muted/40">
+                <span className="text-muted-foreground">PAN / Tax ID:</span>
                 <span className="font-mono font-semibold text-foreground">ABCDE••••F</span>
               </div>
               <div className="flex justify-between p-2.5 rounded-xl bg-muted/40">
-                <span className="text-muted-foreground">UAN Number:</span>
-                <span className="font-mono font-semibold text-foreground">100984758392</span>
-              </div>
-              <div className="flex justify-between p-2.5 rounded-xl bg-muted/40">
-                <span className="text-muted-foreground">Annual CTC:</span>
-                <span className="font-bold text-purple-600 dark:text-purple-400">
-                  {formatINR(salary.gross_earnings * 12)}
-                </span>
+                <span className="text-muted-foreground">Form 16 Status:</span>
+                <Badge variant="orange" className="text-[10px]">
+                  AY 2027-28 In Process
+                </Badge>
               </div>
             </div>
           </div>
 
           <div className="rounded-xl border border-purple-500/20 bg-purple-500/5 p-3 text-[11px] text-muted-foreground leading-relaxed">
-            💡 Tax regime applied: <strong>New Tax Regime (FY 2026–27)</strong>. Form 16 will be issued by June 15, 2027.
+            📄 <strong>Tax Certificate Notice</strong>: Form 16 (Part A & Part B) for {selectedFY} will be generated on June 15, 2027.
           </div>
         </Card>
       </div>
 
-      {/* Monthly Payslips Archive Table */}
+      {/* Financial Year Quarters & Payslip History */}
       <Card className="border border-border/70 rounded-3xl shadow-sm overflow-hidden">
-        <CardHeader className="p-5 pb-3">
-          <CardTitle className="text-base font-semibold">Monthly Payslip History Archive</CardTitle>
-          <CardDescription className="text-xs">
-            Download past monthly payslips and tax statement slips
-          </CardDescription>
+        <CardHeader className="p-5 pb-3 flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <CalendarDays className="h-4 w-4 text-purple-600" />
+              {selectedFY} Monthly Payslips & Quarters Archive
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Q1 (Apr–Jun), Q2 (Jul–Sep), Q3 (Oct–Dec), Q4 (Jan–Mar)
+            </CardDescription>
+          </div>
+          <Badge variant="purple" className="text-xs">
+            4 Statements Available
+          </Badge>
         </CardHeader>
 
         <CardContent className="p-0">
@@ -300,60 +386,65 @@ export default function PayrollPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Pay Period</TableHead>
+                <TableHead>FY Quarter</TableHead>
                 <TableHead>Working Days</TableHead>
                 <TableHead>Gross Earnings</TableHead>
-                <TableHead>Deductions</TableHead>
-                <TableHead>Net Pay</TableHead>
-                <TableHead>Disbursed On</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Deductions (TDS+PF)</TableHead>
+                <TableHead>Net Pay Disbursed</TableHead>
+                <TableHead className="text-right">PDF Download</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {payslips.map((slip) => (
-                <TableRow key={slip.id}>
-                  <TableCell className="font-semibold text-xs text-foreground">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-purple-600" />
-                      <span>{slip.month}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-xs">{slip.working_days} Days</TableCell>
-                  <TableCell className="text-xs font-semibold text-emerald-600">
-                    {formatINR(slip.structure.gross_earnings)}
-                  </TableCell>
-                  <TableCell className="text-xs text-red-500">
-                    {formatINR(slip.structure.total_deductions)}
-                  </TableCell>
-                  <TableCell className="text-xs font-bold text-purple-600 dark:text-purple-400">
-                    {formatINR(slip.structure.net_salary)}
-                  </TableCell>
-                  <TableCell className="text-xs font-mono text-muted-foreground">
-                    {slip.payment_date}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleOpenPreview(slip)}
-                        className="h-7 text-xs rounded-lg gap-1 text-purple-600 dark:text-purple-400"
-                      >
-                        <Eye className="h-3 w-3" />
-                        View
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="purple"
-                        onClick={() => handleDownloadDirectPDF(slip)}
-                        className="h-7 text-xs rounded-lg gap-1 font-semibold shadow-sm"
-                      >
-                        <Download className="h-3 w-3" />
-                        PDF
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {payslips.map((slip, idx) => {
+                const quarterName = idx === 0 ? "Q2 (Jul - Sep)" : idx === 1 ? "Q1 (Apr - Jun)" : idx === 2 ? "Q1 (Apr - Jun)" : "Q1 (Apr - Jun)";
+                return (
+                  <TableRow key={slip.id}>
+                    <TableCell className="font-semibold text-xs text-foreground">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-purple-600" />
+                        <span>{slip.month}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-xs">
+                      <Badge variant="outline" className="text-[10px]">
+                        {quarterName}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-xs">{slip.working_days} Days</TableCell>
+                    <TableCell className="text-xs font-semibold text-emerald-600">
+                      {formatINR(slip.structure.gross_earnings)}
+                    </TableCell>
+                    <TableCell className="text-xs text-red-500">
+                      {formatINR(slip.structure.total_deductions)}
+                    </TableCell>
+                    <TableCell className="text-xs font-bold text-purple-600 dark:text-purple-400">
+                      {formatINR(slip.structure.net_salary)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleOpenPreview(slip)}
+                          className="h-7 text-xs rounded-lg gap-1 text-purple-600 dark:text-purple-400"
+                        >
+                          <Eye className="h-3 w-3" />
+                          View
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="purple"
+                          onClick={() => handleDownloadDirectPDF(slip)}
+                          className="h-7 text-xs rounded-lg gap-1 font-semibold shadow-sm"
+                        >
+                          <Download className="h-3 w-3" />
+                          PDF
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>
@@ -367,14 +458,14 @@ export default function PayrollPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <DialogTitle className="text-lg font-bold text-purple-900 dark:text-purple-300">
-                    ACME CORPORATION - SALARY SLIP
+                    ACME CORPORATION - OFFICIAL SALARY SLIP
                   </DialogTitle>
                   <DialogDescription className="text-xs text-muted-foreground">
-                    Pay Period: {selectedPayslip.month} • Disbursed: {selectedPayslip.payment_date}
+                    Financial Year: {selectedFY} • AY: 2027-28 • Pay Period: {selectedPayslip.month}
                   </DialogDescription>
                 </div>
                 <Badge variant="purple" className="text-xs">
-                  {selectedPayslip.month}
+                  {selectedFY}
                 </Badge>
               </div>
             </DialogHeader>
@@ -391,7 +482,7 @@ export default function PayrollPage() {
                 <div className="space-y-1">
                   <p><strong>Bank Account:</strong> {selectedPayslip.account_number_masked}</p>
                   <p><strong>PAN:</strong> {selectedPayslip.pan_masked}</p>
-                  <p><strong>UAN:</strong> {selectedPayslip.uan_number}</p>
+                  <p><strong>Tax Regime:</strong> New Regime (Section 115BAC)</p>
                   <p><strong>Working Days:</strong> {selectedPayslip.working_days} Days</p>
                 </div>
               </div>
@@ -415,22 +506,25 @@ export default function PayrollPage() {
                     DEDUCTIONS (-)
                   </span>
                   <div className="flex justify-between"><span>Provident Fund (PF):</span><span className="font-semibold">{formatINR(salary.provident_fund)}</span></div>
-                  <div className="flex justify-between"><span>Professional Tax:</span><span className="font-semibold">{formatINR(salary.professional_tax)}</span></div>
+                  <div className="flex justify-between"><span>Professional Tax (PT):</span><span className="font-semibold">{formatINR(salary.professional_tax)}</span></div>
                   <div className="flex justify-between"><span>Income Tax (TDS):</span><span className="font-semibold">{formatINR(salary.income_tax_tds)}</span></div>
                   <div className="flex justify-between"><span>Other Deductions:</span><span className="font-semibold">₹0</span></div>
                   <div className="flex justify-between pt-1 border-t font-bold"><span>Total Deductions:</span><span>{formatINR(salary.total_deductions)}</span></div>
                 </div>
               </div>
 
-              {/* Net Pay */}
+              {/* Net Pay & YTD Box */}
               <div className="p-4 rounded-2xl border border-purple-500/30 bg-purple-500/10 flex items-center justify-between">
                 <div>
                   <span className="text-[11px] font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider">
-                    NET TAKE-HOME SALARY
+                    NET TAKE-HOME SALARY (INR)
                   </span>
                   <div className="text-2xl font-black text-foreground">{formatINR(salary.net_salary)}</div>
                 </div>
-                <span className="text-[10px] text-muted-foreground italic">System-generated official payslip</span>
+                <div className="text-right text-[11px] text-muted-foreground">
+                  <p><strong>YTD Gross ({selectedFY}):</strong> {formatINR(ytdGross)}</p>
+                  <p><strong>YTD TDS Deducted:</strong> {formatINR(ytdTDS)}</p>
+                </div>
               </div>
             </div>
 

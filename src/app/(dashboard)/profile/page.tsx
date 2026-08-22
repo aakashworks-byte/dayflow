@@ -46,7 +46,7 @@ import {
 } from "@/components/ui/dialog";
 
 export default function ProfilePage() {
-  const { user, switchRole, updateUser } = useAuth();
+  const { user, role, switchRole, updateUser } = useAuth();
   const { selectedEmployee, setSelectedEmployee, updateEmployeeProfile, uploadDocument } = useHRMS();
   const { toast } = useToast();
 
@@ -178,7 +178,7 @@ export default function ProfilePage() {
         <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
           <span className="text-xs font-semibold text-muted-foreground mr-1">Switch View Role:</span>
           {(["SUPER_ADMIN", "HR_ADMIN", "LINE_MANAGER", "EMPLOYEE"] as const).map((r) => {
-            const isCurrent = user?.role === r;
+            const isCurrent = role === r;
             return (
               <Button
                 key={r}

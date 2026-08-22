@@ -180,13 +180,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const switchRole = (newRole: Role) => {
-    const allUsers = [...registeredUsers, ...INITIAL_EMPLOYEES];
-    const matched = allUsers.find((e) => e.role === newRole) || INITIAL_EMPLOYEES[0];
-    const savedCustom = localStorage.getItem(`dayflow_custom_${matched.id}`);
-    const finalUser = savedCustom ? JSON.parse(savedCustom) : matched;
-    setUser(finalUser);
+    if (!user) return;
+    const updatedUser: Employee = {
+      ...user,
+      role: newRole,
+    };
+    setUser(updatedUser);
     try {
-      localStorage.setItem("dayflow_active_user_id", finalUser.id);
+      localStorage.setItem(`dayflow_custom_${user.id}`, JSON.stringify(updatedUser));
     } catch {}
   };
 

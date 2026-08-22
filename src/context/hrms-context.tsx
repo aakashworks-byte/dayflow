@@ -218,8 +218,19 @@ export function HRMSProvider({ children }: { children: React.ReactNode }) {
 
     setLeaveRequests((prev) => [newRequest, ...prev]);
 
-    // Update balances temporarily
-    const balanceKey = data.leave_type.toLowerCase() as "casual" | "sick" | "privilege" | "unpaid";
+    // Update balances safely
+    const leaveTypeStr = (data.leave_type || "").toUpperCase();
+    const balanceKey: "privilege" | "sick" | "casual" | "unpaid" =
+      leaveTypeStr === "PAID" || leaveTypeStr === "PRIVILEGE"
+        ? "privilege"
+        : leaveTypeStr === "SICK"
+        ? "sick"
+        : leaveTypeStr === "CASUAL"
+        ? "casual"
+        : "unpaid";
+
+    const daysApplied = Number(data.total_days || (data as any).days_count || 1);
+
     setLeaveBalances((prev) => {
       const userBalance = prev[user.id] || {
         casual: { total: 12, used: 0, remaining: 12 },
@@ -228,14 +239,16 @@ export function HRMSProvider({ children }: { children: React.ReactNode }) {
         unpaid: { total: 30, used: 0, remaining: 30 },
       };
 
+      const category = userBalance[balanceKey] || { total: 15, used: 0, remaining: 15 };
+
       return {
         ...prev,
         [user.id]: {
           ...userBalance,
           [balanceKey]: {
-            ...userBalance[balanceKey],
-            used: userBalance[balanceKey].used + data.total_days,
-            remaining: Math.max(0, userBalance[balanceKey].remaining - data.total_days),
+            ...category,
+            used: (category.used || 0) + daysApplied,
+            remaining: Math.max(0, (category.remaining ?? category.total ?? 0) - daysApplied),
           },
         },
       };
@@ -244,7 +257,7 @@ export function HRMSProvider({ children }: { children: React.ReactNode }) {
     // Notify user
     toast({
       title: "Leave Application Submitted 🚀",
-      description: `Your ${data.leave_type.toLowerCase()} leave request for ${data.total_days} day(s) was submitted to ${user.manager_name || "Manager"} for approval.`,
+      description: `Your ${data.leave_type.toLowerCase()} leave request for ${daysApplied} day(s) was submitted for approval.`,
       variant: "purple",
     });
 

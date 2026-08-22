@@ -159,48 +159,14 @@ export const INITIAL_ATTENDANCE_RECORDS: AttendanceRecord[] = [
   },
 ];
 
-export const INITIAL_LEAVE_BALANCES: LeaveBalance[] = [
-  {
-    id: 'lb-1',
-    employee_id: 'e0000001-0000-0000-0000-000000000001',
-    leave_type: 'PAID',
-    total_allocated: 18,
-    used: 4,
-    pending: 1,
-    available: 13,
-    color: '#7C3AED',
+export const INITIAL_LEAVE_BALANCES: Record<string, LeaveBalance> = {
+  'e0000001-0000-0000-0000-000000000001': {
+    casual: { total: 12, used: 3, remaining: 9 },
+    sick: { total: 12, used: 2, remaining: 10 },
+    privilege: { total: 18, used: 4, remaining: 14 },
+    unpaid: { total: 10, used: 0, remaining: 10 },
   },
-  {
-    id: 'lb-2',
-    employee_id: 'e0000001-0000-0000-0000-000000000001',
-    leave_type: 'SICK',
-    total_allocated: 12,
-    used: 2,
-    pending: 0,
-    available: 10,
-    color: '#F97316',
-  },
-  {
-    id: 'lb-3',
-    employee_id: 'e0000001-0000-0000-0000-000000000001',
-    leave_type: 'CASUAL',
-    total_allocated: 12,
-    used: 3,
-    pending: 0,
-    available: 9,
-    color: '#10B981',
-  },
-  {
-    id: 'lb-4',
-    employee_id: 'e0000001-0000-0000-0000-000000000001',
-    leave_type: 'UNPAID',
-    total_allocated: 10,
-    used: 0,
-    pending: 0,
-    available: 10,
-    color: '#6B7280',
-  },
-];
+};
 
 export const INITIAL_LEAVE_REQUESTS: LeaveRequest[] = [
   {

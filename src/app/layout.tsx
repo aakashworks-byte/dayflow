@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/context/auth-context";
 import { HRMSProvider } from "@/context/hrms-context";
 import { Toaster } from "@/components/ui/toaster";
+import { ClientOnly } from "@/components/client-only";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -29,12 +30,14 @@ export default function RootLayout({
         className="min-h-screen bg-background font-sans text-foreground antialiased selection:bg-purple-500 selection:text-white"
       >
         <ThemeProvider defaultTheme="dark" storageKey="dayflow_theme">
-          <AuthProvider>
-            <HRMSProvider>
-              {children}
-              <Toaster />
-            </HRMSProvider>
-          </AuthProvider>
+          <ClientOnly>
+            <AuthProvider>
+              <HRMSProvider>
+                {children}
+                <Toaster />
+              </HRMSProvider>
+            </AuthProvider>
+          </ClientOnly>
         </ThemeProvider>
       </body>
     </html>

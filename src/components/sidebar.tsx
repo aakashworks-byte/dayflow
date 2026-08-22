@@ -172,6 +172,19 @@ export function Sidebar() {
             </>
           )}
         </Button>
+
+        <button
+          type="button"
+          onClick={() => {
+            try {
+              localStorage.removeItem("dayflow_active_user_id");
+            } catch {}
+            window.location.href = "/login";
+          }}
+          className="w-full mt-2 flex items-center justify-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-red-500 py-1 transition-colors"
+        >
+          <span>Sign Out of Account</span>
+        </button>
       </div>
     </aside>
   );

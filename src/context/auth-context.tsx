@@ -82,8 +82,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       localStorage.removeItem("dayflow_active_user_id");
     } catch {}
-    setUser(INITIAL_EMPLOYEES[0]);
-    router.push("/login");
+    setUser(null);
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
+    } else {
+      router.push("/login");
+    }
   };
 
   const switchRole = (newRole: Role) => {

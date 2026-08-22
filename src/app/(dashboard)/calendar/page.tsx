@@ -462,7 +462,7 @@ export default function CalendarPage() {
                         <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300">🇮🇳 {h.name}</span>
                         <Badge variant="success" className="text-[9px]">{h.type}</Badge>
                       </div>
-                      <p className="text-[11px] text-muted-foreground">Official paid national/gazetted holiday for all Acme employees.</p>
+                      <p className="text-[11px] text-muted-foreground">Official paid national/gazetted holiday for all NMIT faculty & staff.</p>
                     </div>
                   ))}
 
@@ -503,7 +503,7 @@ export default function CalendarPage() {
                 </Badge>
               </div>
               <CardDescription className="text-xs">
-                Official statutory leaves observed by Acme Corporation
+                Official statutory leaves observed by NMIT
               </CardDescription>
             </CardHeader>
 

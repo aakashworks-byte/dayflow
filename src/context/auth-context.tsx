@@ -86,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       timezone: "Asia/Kolkata (IST)",
       avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(userData.name)}`,
       address: "Bellandur, Bengaluru, Karnataka - 560103",
-      bio: `Team member at Acme Corporation specialized in ${userData.role === "HR_ADMIN" ? "People Operations" : "Product Engineering"}.`,
+      bio: `Team member at NMIT (Nitte Meenakshi Institute of Technology) specialized in ${userData.role === "HR_ADMIN" ? "People Operations" : "Engineering & Academics"}.`,
       salary_structure: {
         basic: 85000,
         hra: 34000,

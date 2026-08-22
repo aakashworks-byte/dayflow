@@ -458,7 +458,7 @@ export default function PayrollPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <DialogTitle className="text-lg font-bold text-purple-900 dark:text-purple-300">
-                    ACME CORPORATION - OFFICIAL SALARY SLIP
+                    NMIT BENGALURU - OFFICIAL SALARY SLIP
                   </DialogTitle>
                   <DialogDescription className="text-xs text-muted-foreground">
                     Financial Year: {selectedFY} • AY: 2027-28 • Pay Period: {selectedPayslip.month}

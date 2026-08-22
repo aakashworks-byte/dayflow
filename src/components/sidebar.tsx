@@ -137,10 +137,10 @@ export function Sidebar() {
               <Building2 className="h-4 w-4" />
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-xs text-foreground tracking-tight">Acme Corporation</span>
+              <span className="font-bold text-xs text-foreground tracking-tight">NMIT</span>
               <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                 <MapPin className="h-2.5 w-2.5 text-purple-500" />
-                Bengaluru Hub
+                Bengaluru Campus
               </span>
             </div>
           </div>

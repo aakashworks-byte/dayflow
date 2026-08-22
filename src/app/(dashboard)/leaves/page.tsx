@@ -678,7 +678,7 @@ export default function LeavesPage() {
                   </div>
                   <span className="font-bold text-foreground block">Evidence Snapshot</span>
                   <p className="text-[11px] text-muted-foreground">
-                    Tenant: Acme Corporation • Org ID: 11111111-1111 • Zero conflicting blocker meetings found on calendar.
+                    Tenant: NMIT (Nitte Meenakshi Institute of Technology) • Org ID: 11111111-1111 • Zero conflicting blocker meetings found on calendar.
                   </p>
                 </div>
 

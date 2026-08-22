@@ -24,12 +24,12 @@ export async function generatePayslipPDF(slip: Payslip, user?: Employee | null) 
   // Company Name
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(18);
-  doc.text("ACME CORPORATION", 14, 13);
+  doc.setFontSize(16);
+  doc.text("NITTE MEENAKSHI INSTITUTE OF TECHNOLOGY (NMIT)", 14, 13);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
-  doc.text("Outer Ring Road, Bellandur, Bengaluru, Karnataka - 560103 • CIN: U72200KA2023PTC112233", 14, 19);
+  doc.text("Yelahanka, Bengaluru, Karnataka - 560064 • Affiliated to VTU & Autonomous", 14, 19);
   doc.setFont("helvetica", "bold");
   doc.text("FINANCIAL YEAR: FY 2026-27 | ASSESSMENT YEAR: AY 2027-28", 14, 25);
 
@@ -195,7 +195,7 @@ export async function generatePayslipPDF(slip: Payslip, user?: Employee | null) 
   doc.setTextColor(71, 85, 105);
   doc.text("Authorized Signatory", 140, currentY + 26);
   doc.setFont("helvetica", "normal");
-  doc.text("Acme Corp Human Resources", 140, currentY + 30);
+  doc.text("NMIT Human Resources", 140, currentY + 30);
 
   // Save the generated PDF
   doc.save(`Dayflow_Payslip_FY26-27_${slip.month.replace(" ", "_")}_EMP-001.pdf`);

@@ -342,8 +342,8 @@ export default function ProfilePage() {
               <p className="font-semibold text-foreground truncate">Bengaluru Hub</p>
             </div>
             <div className="space-y-0.5">
-              <span className="text-muted-foreground text-[11px]">Company</span>
-              <p className="font-semibold text-foreground">Acme Corporation</p>
+              <span className="text-muted-foreground text-[11px]">Organization</span>
+              <p className="font-semibold text-foreground">NMIT (Nitte Meenakshi Institute of Technology)</p>
             </div>
             <div className="space-y-0.5">
               <span className="text-muted-foreground text-[11px]">Joining Date</span>

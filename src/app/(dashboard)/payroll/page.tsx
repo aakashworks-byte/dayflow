@@ -73,10 +73,10 @@ export default function PayrollPage() {
   const ytdTDS = salary.income_tax_tds * ytdMonthsCount;
 
   // Direct PDF Download Handler
-  const handleDownloadDirectPDF = (slip: Payslip) => {
+  const handleDownloadDirectPDF = async (slip: Payslip) => {
     setIsDownloading(true);
     try {
-      generatePayslipPDF(slip, user);
+      await generatePayslipPDF(slip, user);
       toast({
         title: "Salary Slip Downloaded! 📄",
         description: `Official PDF for ${slip.month} (${selectedFY}) has been saved to your computer.`,

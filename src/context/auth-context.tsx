@@ -13,6 +13,7 @@ interface AuthContextType {
   logout: () => void;
   switchRole: (role: Role) => void;
   switchUser: (employeeId: string) => void;
+  updateUser: (updated: Partial<Employee>) => void;
   isHrAdmin: boolean;
   isManager: boolean;
   isEmployee: boolean;
@@ -33,6 +34,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const savedUserId = localStorage.getItem("dayflow_active_user_id");
       if (savedUserId) {
+        const savedCustom = localStorage.getItem(`dayflow_custom_${savedUserId}`);
+        if (savedCustom) {
+          setUser(JSON.parse(savedCustom));
+          return;
+        }
         const found = INITIAL_EMPLOYEES.find((e) => e.id === savedUserId);
         if (found) {
           setUser(found);
@@ -46,7 +52,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, customRole?: Role) => {
     setIsLoading(true);
     try {
-      // Find matching employee by work_email or personal_email
       let matched = INITIAL_EMPLOYEES.find(
         (e) => e.work_email.toLowerCase() === email.toLowerCase() || e.personal_email?.toLowerCase() === email.toLowerCase()
       );
@@ -56,12 +61,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (!matched) {
-        // Fallback to first employee
         matched = INITIAL_EMPLOYEES[0];
       }
 
-      setUser(matched);
-      localStorage.setItem("dayflow_active_user_id", matched.id);
+      // Check if custom edits exist in storage
+      const savedCustom = localStorage.getItem(`dayflow_custom_${matched.id}`);
+      const finalUser = savedCustom ? JSON.parse(savedCustom) : matched;
+
+      setUser(finalUser);
+      localStorage.setItem("dayflow_active_user_id", finalUser.id);
       setIsLoading(false);
       return { success: true };
     } catch (err) {
@@ -80,20 +88,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const switchRole = (newRole: Role) => {
     const matched = INITIAL_EMPLOYEES.find((e) => e.role === newRole) || INITIAL_EMPLOYEES[0];
-    setUser(matched);
+    const savedCustom = localStorage.getItem(`dayflow_custom_${matched.id}`);
+    const finalUser = savedCustom ? JSON.parse(savedCustom) : matched;
+    setUser(finalUser);
     try {
-      localStorage.setItem("dayflow_active_user_id", matched.id);
+      localStorage.setItem("dayflow_active_user_id", finalUser.id);
     } catch {}
   };
 
   const switchUser = (employeeId: string) => {
     const matched = INITIAL_EMPLOYEES.find((e) => e.id === employeeId);
     if (matched) {
-      setUser(matched);
+      const savedCustom = localStorage.getItem(`dayflow_custom_${matched.id}`);
+      const finalUser = savedCustom ? JSON.parse(savedCustom) : matched;
+      setUser(finalUser);
       try {
-        localStorage.setItem("dayflow_active_user_id", matched.id);
+        localStorage.setItem("dayflow_active_user_id", finalUser.id);
       } catch {}
     }
+  };
+
+  const updateUser = (updated: Partial<Employee>) => {
+    if (!user) return;
+    const merged = { ...user, ...updated };
+    setUser(merged);
+    try {
+      localStorage.setItem(`dayflow_custom_${merged.id}`, JSON.stringify(merged));
+    } catch {}
   };
 
   const currentRole = user?.role || "EMPLOYEE";
@@ -112,6 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         switchRole,
         switchUser,
+        updateUser,
         isHrAdmin,
         isManager,
         isEmployee,

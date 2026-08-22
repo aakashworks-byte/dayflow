@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   User,
   Mail,
@@ -22,6 +22,8 @@ import {
   Layers,
   ArrowLeft,
   Sparkles,
+  RefreshCw,
+  Users,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { useHRMS } from "@/context/hrms-context";
@@ -44,20 +46,44 @@ import {
 } from "@/components/ui/dialog";
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, availableUsers, switchUser, updateUser } = useAuth();
   const { selectedEmployee, setSelectedEmployee, updateEmployeeProfile, uploadDocument } = useHRMS();
   const { toast } = useToast();
 
-  // Active employee being viewed (either current logged in user or inspected employee)
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Active employee being viewed
   const activeEmployee = selectedEmployee || user;
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
+    first_name: activeEmployee?.first_name || "David",
+    last_name: activeEmployee?.last_name || "Chen",
+    job_title: activeEmployee?.job_title || "Senior Backend Engineer",
+    department_name: activeEmployee?.department_name || "Engineering",
     phone: activeEmployee?.phone || "+91 98765 43210",
     personal_email: activeEmployee?.personal_email || "david.chen.dev@gmail.com",
     address: activeEmployee?.address || "Flat 402, Green Glen Layout, Bellandur, Bengaluru, Karnataka - 560103",
     bio: activeEmployee?.bio || "Distributed systems architect & backend engineer specializing in high-throughput microservices, PostgreSQL optimizations, and real-time event-driven infrastructure.",
+    avatar_url: activeEmployee?.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
   });
+
+  // Keep formData in sync when activeEmployee changes
+  useEffect(() => {
+    if (activeEmployee) {
+      setFormData({
+        first_name: activeEmployee.first_name || "",
+        last_name: activeEmployee.last_name || "",
+        job_title: activeEmployee.job_title || "",
+        department_name: activeEmployee.department_name || "",
+        phone: activeEmployee.phone || "+91 98765 43210",
+        personal_email: activeEmployee.personal_email || "",
+        address: activeEmployee.address || "",
+        bio: activeEmployee.bio || "",
+        avatar_url: activeEmployee.avatar_url || "",
+      });
+    }
+  }, [activeEmployee]);
 
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadData, setUploadData] = useState({
@@ -72,16 +98,33 @@ export default function ProfilePage() {
   const isSelf = user?.id === activeEmployee.id;
 
   const handleSaveProfile = () => {
-    updateEmployeeProfile(formData);
+    const displayName = `${formData.first_name} ${formData.last_name}`.trim();
+    const updatedFields = {
+      ...formData,
+      display_name: displayName || activeEmployee.display_name,
+    };
+
+    updateEmployeeProfile(updatedFields);
     setIsEditing(false);
   };
 
-  const handleAvatarUpload = () => {
-    toast({
-      title: "Avatar Uploaded! 📸",
-      description: "Your new profile picture has been updated across Dayflow.",
-      variant: "success",
-    });
+  // Real Image File Picker Handler for Avatar
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64Url = event.target?.result as string;
+        setFormData((prev) => ({ ...prev, avatar_url: base64Url }));
+        updateEmployeeProfile({ avatar_url: base64Url });
+        toast({
+          title: "Profile Picture Updated! 📸",
+          description: "Your new avatar has been applied across Dayflow.",
+          variant: "purple",
+        });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleUploadDoc = (e: React.FormEvent) => {
@@ -113,6 +156,60 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Hidden native file input for profile picture uploads */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept="image/*"
+        className="hidden"
+      />
+
+      {/* Top Banner & Quick Persona Switcher Bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-3xl border border-purple-500/20 bg-gradient-to-r from-purple-950/30 via-background to-orange-500/10 backdrop-blur-xl">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-purple-600/20 text-purple-600 dark:text-purple-400">
+            <Users className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="text-xs sm:text-sm font-bold text-foreground">Switch Active Employee Profile</h3>
+            <p className="text-[11px] text-muted-foreground">Select any coworker persona to inspect or edit their profile</p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+          {availableUsers.map((u) => {
+            const isSelected = activeEmployee.id === u.id;
+            return (
+              <Button
+                key={u.id}
+                size="sm"
+                variant={isSelected ? "purple" : "outline"}
+                onClick={() => {
+                  setSelectedEmployee(null);
+                  switchUser(u.id);
+                  toast({
+                    title: `Switched to ${u.display_name}`,
+                    description: `Active role: ${u.role.replace("_", " ")}`,
+                    variant: "purple",
+                  });
+                }}
+                className={`h-8 text-xs rounded-xl gap-1.5 font-medium transition-all ${
+                  isSelected ? "shadow-md ring-2 ring-purple-500/40" : "border-border/60 hover:bg-muted"
+                }`}
+              >
+                <Avatar className="h-4 w-4 rounded-full">
+                  <AvatarImage src={u.avatar_url} />
+                  <AvatarFallback>{u.first_name[0]}</AvatarFallback>
+                </Avatar>
+                <span>{u.first_name}</span>
+                <span className="text-[10px] opacity-70">({u.role === "SUPER_ADMIN" ? "CEO" : u.role === "HR_ADMIN" ? "HR" : u.role === "LINE_MANAGER" ? "Mgr" : "Eng"})</span>
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Return to own profile banner if viewing someone else */}
       {!isSelf && (
         <div className="flex items-center justify-between p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/30">
@@ -137,75 +234,123 @@ export default function ProfilePage() {
         <div className="h-32 bg-gradient-to-r from-purple-700 via-indigo-600 to-orange-500 relative">
           <div className="absolute top-4 right-4 flex items-center gap-2">
             <Badge variant="purple" className="bg-white/20 text-white border-transparent backdrop-blur-sm">
-              {activeEmployee.employment_type.replace("_", " ")}
+              {activeEmployee.employment_type?.replace("_", " ") || "Full Time"}
             </Badge>
             <Badge variant="success" className="backdrop-blur-sm">
-              {activeEmployee.employment_status}
+              {activeEmployee.employment_status || "Active"}
             </Badge>
           </div>
         </div>
 
         <CardContent className="px-6 sm:px-8 pb-6 pt-0 relative">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 -mt-16 sm:-mt-14 mb-4">
-            {/* Large Circular Avatar with Upload Trigger */}
+            {/* Large Circular Avatar with Click-to-Upload Trigger */}
             <div className="relative group">
-              <Avatar className="h-28 w-28 sm:h-32 sm:w-32 ring-4 ring-background shadow-2xl rounded-full">
-                <AvatarImage src={activeEmployee.avatar_url} alt={activeEmployee.display_name} />
-                <AvatarFallback className="text-2xl font-bold">
+              <Avatar className="h-28 w-28 sm:h-32 sm:w-32 ring-4 ring-background shadow-2xl rounded-full cursor-pointer overflow-hidden">
+                <AvatarImage src={formData.avatar_url || activeEmployee.avatar_url} alt={activeEmployee.display_name} className="object-cover" />
+                <AvatarFallback className="text-2xl font-bold bg-purple-600 text-white">
                   {activeEmployee.first_name[0]}
                 </AvatarFallback>
               </Avatar>
-              {isSelf && (
-                <button
-                  type="button"
-                  onClick={handleAvatarUpload}
-                  className="absolute bottom-1 right-1 flex h-8 w-8 items-center justify-center rounded-full bg-purple-600 text-white shadow-lg transition-transform hover:scale-110 active:scale-95"
-                  title="Upload profile picture"
-                >
-                  <Camera className="h-4 w-4" />
-                </button>
-              )}
+
+              {/* Camera Trigger */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute bottom-1 right-1 flex h-9 w-9 items-center justify-center rounded-full bg-purple-600 text-white shadow-xl transition-all duration-200 hover:scale-110 hover:bg-purple-700 active:scale-95 ring-2 ring-background"
+                title="Click to upload profile photo from your device"
+              >
+                <Camera className="h-4 w-4" />
+              </button>
             </div>
 
-            {/* Edit / Save Profile Button */}
-            {isSelf && (
-              <div className="flex items-center gap-2">
-                {isEditing ? (
+            {/* Edit / Save Profile Buttons */}
+            <div className="flex items-center gap-2">
+              {isEditing ? (
+                <>
+                  <Button
+                    onClick={() => setIsEditing(false)}
+                    variant="outline"
+                    size="sm"
+                    className="rounded-xl text-xs"
+                  >
+                    Cancel
+                  </Button>
                   <Button
                     onClick={handleSaveProfile}
                     variant="purple"
                     size="sm"
-                    className="rounded-xl text-xs gap-1.5 shadow-md"
+                    className="rounded-xl text-xs gap-1.5 shadow-md font-semibold"
                   >
                     <Save className="h-3.5 w-3.5" />
                     Save Changes
                   </Button>
-                ) : (
-                  <Button
-                    onClick={() => setIsEditing(true)}
-                    variant="outline"
-                    size="sm"
-                    className="rounded-xl text-xs gap-1.5 border-purple-500/30"
-                  >
-                    <Edit3 className="h-3.5 w-3.5 text-purple-600" />
-                    Edit Personal Info
-                  </Button>
-                )}
-              </div>
-            )}
+                </>
+              ) : (
+                <Button
+                  onClick={() => setIsEditing(true)}
+                  variant="purple"
+                  size="sm"
+                  className="rounded-xl text-xs gap-1.5 font-semibold shadow-md"
+                >
+                  <Edit3 className="h-3.5 w-3.5" />
+                  Edit Profile & Bio
+                </Button>
+              )}
+            </div>
           </div>
 
-          {/* Name & Title */}
-          <div className="space-y-1">
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
-              {activeEmployee.display_name}
-              <Badge variant="purple" className="text-xs font-mono">
-                {activeEmployee.employee_code}
-              </Badge>
-            </h2>
-            <p className="text-sm font-medium text-purple-600 dark:text-purple-400">
-              {activeEmployee.job_title}
-            </p>
+          {/* Name & Title (Editable when isEditing) */}
+          <div className="space-y-2 max-w-2xl">
+            {isEditing ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-2">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-muted-foreground">First Name</label>
+                  <Input
+                    value={formData.first_name}
+                    onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                    className="text-xs h-9 rounded-xl"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-muted-foreground">Last Name</label>
+                  <Input
+                    value={formData.last_name}
+                    onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                    className="text-xs h-9 rounded-xl"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-muted-foreground">Job Title / Designation</label>
+                  <Input
+                    value={formData.job_title}
+                    onChange={(e) => setFormData({ ...formData, job_title: e.target.value })}
+                    className="text-xs h-9 rounded-xl"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-muted-foreground">Avatar Image URL</label>
+                  <Input
+                    placeholder="https://... or click camera icon"
+                    value={formData.avatar_url}
+                    onChange={(e) => setFormData({ ...formData, avatar_url: e.target.value })}
+                    className="text-xs h-9 rounded-xl"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
+                  {formData.first_name && formData.last_name ? `${formData.first_name} ${formData.last_name}` : activeEmployee.display_name}
+                  <Badge variant="purple" className="text-xs font-mono">
+                    {activeEmployee.employee_code}
+                  </Badge>
+                </h2>
+                <p className="text-sm font-medium text-purple-600 dark:text-purple-400 mt-0.5">
+                  {formData.job_title || activeEmployee.job_title}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Quick Info Grid */}
@@ -220,7 +365,7 @@ export default function ProfilePage() {
             </div>
             <div className="space-y-0.5">
               <span className="text-muted-foreground text-[11px]">Office Location</span>
-              <p className="font-semibold text-foreground truncate">{activeEmployee.location_name.split(" ")[0]}</p>
+              <p className="font-semibold text-foreground truncate">{activeEmployee.location_name?.split(" ")[0] || "Bengaluru"}</p>
             </div>
             <div className="space-y-0.5">
               <span className="text-muted-foreground text-[11px]">Company</span>
@@ -251,14 +396,27 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Editable Contact Information */}
             <Card className="border border-border/70 rounded-2xl shadow-sm">
-              <CardHeader className="p-5 pb-3">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-purple-600" />
-                  Personal Contact Details
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  {isSelf ? "You have edit access for personal contact fields" : "Contact records"}
-                </CardDescription>
+              <CardHeader className="p-5 pb-3 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-purple-600" />
+                    Personal Contact Details
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Direct phone, personal email, and residential address
+                  </CardDescription>
+                </div>
+                {!isEditing && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setIsEditing(true)}
+                    className="h-7 text-xs rounded-lg gap-1 border-purple-500/30 text-purple-600"
+                  >
+                    <Edit3 className="h-3 w-3" />
+                    Edit
+                  </Button>
+                )}
               </CardHeader>
               <CardContent className="p-5 pt-2 space-y-4">
                 <div className="space-y-1">
@@ -325,11 +483,11 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex items-center justify-between border-b border-border/40 pb-2">
                   <span className="text-muted-foreground">Designation & Band:</span>
-                  <span className="font-semibold text-purple-600 dark:text-purple-400">{activeEmployee.job_title}</span>
+                  <span className="font-semibold text-purple-600 dark:text-purple-400">{formData.job_title || activeEmployee.job_title}</span>
                 </div>
                 <div className="flex items-center justify-between border-b border-border/40 pb-2">
                   <span className="text-muted-foreground">Assigned Timezone:</span>
-                  <span className="font-mono text-foreground">{activeEmployee.timezone}</span>
+                  <span className="font-mono text-foreground">{activeEmployee.timezone || "Asia/Kolkata (IST)"}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Access Role:</span>
@@ -343,21 +501,40 @@ export default function ProfilePage() {
 
           {/* About / Bio Section */}
           <Card className="border border-border/70 rounded-2xl shadow-sm">
-            <CardHeader className="p-5 pb-2">
+            <CardHeader className="p-5 pb-2 flex flex-row items-center justify-between">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-purple-600" />
                 About & Professional Bio
               </CardTitle>
+              {!isEditing && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setIsEditing(true)}
+                  className="h-7 text-xs rounded-lg gap-1 border-purple-500/30 text-purple-600"
+                >
+                  <Edit3 className="h-3 w-3" />
+                  Edit Bio
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="p-5 pt-2">
               {isEditing ? (
-                <Textarea
-                  value={formData.bio}
-                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                  placeholder="Share a short bio about your role and interests..."
-                  className="text-xs rounded-xl"
-                  rows={4}
-                />
+                <div className="space-y-3">
+                  <Textarea
+                    value={formData.bio}
+                    onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                    placeholder="Share a short bio about your role, achievements, and interests..."
+                    className="text-xs rounded-xl"
+                    rows={4}
+                  />
+                  <div className="flex justify-end">
+                    <Button onClick={handleSaveProfile} variant="purple" size="sm" className="rounded-xl text-xs gap-1">
+                      <Save className="h-3 w-3" />
+                      Save Bio
+                    </Button>
+                  </div>
+                </div>
               ) : (
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   {formData.bio}
@@ -380,17 +557,15 @@ export default function ProfilePage() {
                   Verified HR credentials, tax declarations, and contracts
                 </CardDescription>
               </div>
-              {isSelf && (
-                <Button
-                  onClick={() => setShowUploadModal(true)}
-                  variant="purple"
-                  size="sm"
-                  className="h-8 rounded-xl text-xs gap-1.5 shadow-sm"
-                >
-                  <Upload className="h-3.5 w-3.5" />
-                  Upload Document
-                </Button>
-              )}
+              <Button
+                onClick={() => setShowUploadModal(true)}
+                variant="purple"
+                size="sm"
+                className="h-8 rounded-xl text-xs gap-1.5 shadow-sm"
+              >
+                <Upload className="h-3.5 w-3.5" />
+                Upload Document
+              </Button>
             </CardHeader>
 
             <CardContent className="p-5 pt-0">

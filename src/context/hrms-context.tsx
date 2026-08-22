@@ -343,13 +343,13 @@ export function HRMSProvider({ children }: { children: React.ReactNode }) {
   // Profile updates
   const updateEmployeeProfile = (updated: Partial<Employee>) => {
     if (!user) return;
-    const updatedUser = { ...user, ...updated };
+    updateUser(updated);
     setEmployees((prev) =>
       prev.map((e) => (e.id === user.id ? { ...e, ...updated } : e))
     );
     toast({
       title: "Profile Updated ✨",
-      description: "Your personal details and bio were updated successfully.",
+      description: "Your personal details, photo, and bio were updated successfully.",
       variant: "purple",
     });
   };

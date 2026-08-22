@@ -164,7 +164,7 @@ export function Sidebar() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    prefetch={false}
+                    prefetch={true}
                     className={`group flex items-center justify-between rounded-xl px-2.5 py-2 text-xs font-medium transition-all ${
                       isActive
                         ? "bg-purple-600 text-white shadow-sm shadow-purple-600/25 font-semibold"

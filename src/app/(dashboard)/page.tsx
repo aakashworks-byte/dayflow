@@ -138,7 +138,7 @@ export default function DashboardPage() {
       {/* 4 Quick Access Cards with Polished Elevation */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {/* Quick Card 1: Profile */}
-        <Link href="/profile" className="group">
+        <Link href="/profile" prefetch={true} className="group">
           <Card className="h-full border border-border/70 hover:border-purple-500/50 hover:shadow-md transition-all rounded-3xl overflow-hidden bg-card/80 backdrop-blur-sm">
             <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
               <div className="flex items-center justify-between">
@@ -166,7 +166,7 @@ export default function DashboardPage() {
         </Link>
 
         {/* Quick Card 2: Attendance */}
-        <Link href="/attendance" className="group">
+        <Link href="/attendance" prefetch={true} className="group">
           <Card className="h-full border border-border/70 hover:border-emerald-500/50 hover:shadow-md transition-all rounded-3xl overflow-hidden bg-card/80 backdrop-blur-sm">
             <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
               <div className="flex items-center justify-between">
@@ -194,7 +194,7 @@ export default function DashboardPage() {
         </Link>
 
         {/* Quick Card 3: Smart Leaves & Policy Engine */}
-        <Link href="/leaves" className="group">
+        <Link href="/leaves" prefetch={true} className="group">
           <Card className="h-full border border-border/70 hover:border-purple-500/50 hover:shadow-md transition-all rounded-3xl overflow-hidden bg-card/80 backdrop-blur-sm">
             <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
               <div className="flex items-center justify-between">
@@ -222,7 +222,7 @@ export default function DashboardPage() {
         </Link>
 
         {/* Quick Card 4: Payroll (₹ INR) */}
-        <Link href="/payroll" className="group">
+        <Link href="/payroll" prefetch={true} className="group">
           <Card className="h-full border border-border/70 hover:border-purple-500/50 hover:shadow-md transition-all rounded-3xl overflow-hidden bg-card/80 backdrop-blur-sm">
             <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
               <div className="flex items-center justify-between">

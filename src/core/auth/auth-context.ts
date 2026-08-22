@@ -1,3 +1,5 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 // src/core/auth/auth-context.ts
 /**
  * AuthContext shape used across the backend.
@@ -26,7 +28,7 @@ export interface AuthContext {
  * Helper to construct AuthContext from Supabase session.
  * Uses database functions (auth_org_id, auth_employee_id) for authoritative data.
  */
-export async function buildAuthContext(supabase: any): Promise<AuthContext> {
+export async function buildAuthContext(supabase: SupabaseClient): Promise<AuthContext> {
   // Fetch user id from JWT – Supabase client already validates it.
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {

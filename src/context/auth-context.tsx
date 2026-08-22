@@ -10,6 +10,7 @@ interface AuthContextType {
   role: Role;
   isLoading: boolean;
   login: (email: string, role?: Role) => Promise<{ success: boolean; error?: string }>;
+  registerUser: (userData: { employeeCode?: string; name: string; email: string; role: Role }) => Employee;
   logout: () => void;
   switchRole: (role: Role) => void;
   switchUser: (employeeId: string) => void;
@@ -24,22 +25,31 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Default to David Chen (Employee) for consistent server/client initial render
+  const [registeredUsers, setRegisteredUsers] = useState<Employee[]>([]);
   const [user, setUser] = useState<Employee | null>(INITIAL_EMPLOYEES[0]);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
+  // Load custom registered users and active session on mount
   useEffect(() => {
-    // Try to load saved user session if exists
     try {
+      let savedRegistered: Employee[] = [];
+      const rawRegistered = localStorage.getItem("dayflow_registered_users");
+      if (rawRegistered) {
+        savedRegistered = JSON.parse(rawRegistered);
+        setRegisteredUsers(savedRegistered);
+      }
+
+      const allUsers = [...INITIAL_EMPLOYEES, ...savedRegistered];
       const savedUserId = localStorage.getItem("dayflow_active_user_id");
+
       if (savedUserId) {
         const savedCustom = localStorage.getItem(`dayflow_custom_${savedUserId}`);
         if (savedCustom) {
           setUser(JSON.parse(savedCustom));
           return;
         }
-        const found = INITIAL_EMPLOYEES.find((e) => e.id === savedUserId);
+        const found = allUsers.find((e) => e.id === savedUserId);
         if (found) {
           setUser(found);
         }
@@ -49,19 +59,98 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const registerUser = (userData: { employeeCode?: string; name: string; email: string; role: Role }) => {
+    const parts = userData.name.trim().split(" ");
+    const firstName = parts[0] || "User";
+    const lastName = parts.slice(1).join(" ") || "Member";
+
+    const newEmp: Employee = {
+      id: `emp-custom-${Date.now()}`,
+      user_id: `usr-${Date.now()}`,
+      organization_id: "11111111-1111-1111-1111-111111111111",
+      employee_code: userData.employeeCode || `EMP-${Math.floor(100 + Math.random() * 900)}`,
+      first_name: firstName,
+      last_name: lastName,
+      display_name: userData.name,
+      work_email: userData.email,
+      personal_email: userData.email,
+      phone: "+91 98765 43210",
+      role: userData.role,
+      department_name: userData.role === "HR_ADMIN" ? "Human Resources" : userData.role === "LINE_MANAGER" ? "Engineering Management" : "Engineering Core",
+      job_title: userData.role === "HR_ADMIN" ? "HR Administrator" : userData.role === "LINE_MANAGER" ? "Lead Engineering Manager" : "Software Engineer",
+      location_name: "Bengaluru Hub",
+      manager_name: "Alex Vance (CEO)",
+      joining_date: new Date().toISOString().split("T")[0],
+      employment_status: "ACTIVE",
+      employment_type: "FULL_TIME",
+      timezone: "Asia/Kolkata (IST)",
+      avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(userData.name)}`,
+      address: "Bellandur, Bengaluru, Karnataka - 560103",
+      bio: `Team member at Acme Corporation specialized in ${userData.role === "HR_ADMIN" ? "People Operations" : "Product Engineering"}.`,
+      salary_structure: {
+        basic: 85000,
+        hra: 34000,
+        special_allowance: 22000,
+        conveyance_allowance: 5000,
+        medical_allowance: 4000,
+        gross_earnings: 150000,
+        provident_fund: 10200,
+        professional_tax: 200,
+        income_tax_tds: 12600,
+        total_deductions: 23000,
+        net_salary: 127000,
+        currency: "INR",
+      },
+    };
+
+    const updated = [...registeredUsers, newEmp];
+    setRegisteredUsers(updated);
+    try {
+      localStorage.setItem("dayflow_registered_users", JSON.stringify(updated));
+    } catch {}
+
+    setUser(newEmp);
+    try {
+      localStorage.setItem("dayflow_active_user_id", newEmp.id);
+    } catch {}
+
+    return newEmp;
+  };
+
   const login = async (email: string, customRole?: Role) => {
     setIsLoading(true);
     try {
-      let matched = INITIAL_EMPLOYEES.find(
-        (e) => e.work_email.toLowerCase() === email.toLowerCase() || e.personal_email?.toLowerCase() === email.toLowerCase()
+      const cleanEmail = email.trim().toLowerCase();
+      const allUsers = [...registeredUsers, ...INITIAL_EMPLOYEES];
+
+      // 1. Look for exact match by work_email or personal_email or employee_code
+      let matched = allUsers.find(
+        (e) =>
+          e.work_email.toLowerCase() === cleanEmail ||
+          e.personal_email?.toLowerCase() === cleanEmail ||
+          e.employee_code.toLowerCase() === cleanEmail
       );
 
+      // 2. If no exact match and customRole provided
       if (!matched && customRole) {
-        matched = INITIAL_EMPLOYEES.find((e) => e.role === customRole);
+        matched = allUsers.find((e) => e.role === customRole);
       }
 
+      // 3. If user entered a custom new email not in demo seed, automatically register them!
       if (!matched) {
-        matched = INITIAL_EMPLOYEES[0];
+        // Derive clean name from email prefix e.g. "dhruv.singh@gmail.com" -> "Dhruv Singh"
+        const prefix = cleanEmail.split("@")[0].replace(/[._-]/g, " ");
+        const derivedName = prefix
+          .split(" ")
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(" ") || "Employee User";
+
+        matched = registerUser({
+          name: derivedName,
+          email: email.trim(),
+          role: customRole || "EMPLOYEE",
+          employeeCode: `EMP-${Math.floor(100 + Math.random() * 900)}`,
+        });
       }
 
       // Check if custom edits exist in storage
@@ -91,7 +180,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const switchRole = (newRole: Role) => {
-    const matched = INITIAL_EMPLOYEES.find((e) => e.role === newRole) || INITIAL_EMPLOYEES[0];
+    const allUsers = [...registeredUsers, ...INITIAL_EMPLOYEES];
+    const matched = allUsers.find((e) => e.role === newRole) || INITIAL_EMPLOYEES[0];
     const savedCustom = localStorage.getItem(`dayflow_custom_${matched.id}`);
     const finalUser = savedCustom ? JSON.parse(savedCustom) : matched;
     setUser(finalUser);
@@ -101,7 +191,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const switchUser = (employeeId: string) => {
-    const matched = INITIAL_EMPLOYEES.find((e) => e.id === employeeId);
+    const allUsers = [...registeredUsers, ...INITIAL_EMPLOYEES];
+    const matched = allUsers.find((e) => e.id === employeeId);
     if (matched) {
       const savedCustom = localStorage.getItem(`dayflow_custom_${matched.id}`);
       const finalUser = savedCustom ? JSON.parse(savedCustom) : matched;
@@ -127,6 +218,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isEmployee = currentRole === "EMPLOYEE";
   const isSuperAdmin = currentRole === "SUPER_ADMIN";
 
+  const allAvailableUsers = [...registeredUsers, ...INITIAL_EMPLOYEES];
+
   return (
     <AuthContext.Provider
       value={{
@@ -134,6 +227,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: currentRole,
         isLoading,
         login,
+        registerUser,
         logout,
         switchRole,
         switchUser,
@@ -142,7 +236,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isManager,
         isEmployee,
         isSuperAdmin,
-        availableUsers: INITIAL_EMPLOYEES,
+        availableUsers: allAvailableUsers,
       }}
     >
       {children}

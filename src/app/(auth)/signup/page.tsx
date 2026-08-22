@@ -21,14 +21,14 @@ import { useToast } from "@/components/ui/use-toast";
 
 export default function SignupPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { registerUser } = useAuth();
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
     employeeCode: "EMP-008",
     name: "Rohan Verma",
     email: "rohan.verma@dayflow.io",
-    role: "EMPLOYEE",
+    role: "EMPLOYEE" as const,
     password: "Password123!",
     confirmPassword: "Password123!",
   });
@@ -47,17 +47,25 @@ export default function SignupPage() {
       return;
     }
 
-    // Simulate onboarding
-    setTimeout(async () => {
+    try {
+      registerUser({
+        name: formData.name,
+        email: formData.email,
+        role: formData.role as any,
+        employeeCode: formData.employeeCode,
+      });
+
       setIsLoading(false);
       toast({
         title: "Employee Account Created! 🎉",
-        description: `Welcome to Dayflow, ${formData.name}.`,
+        description: `Welcome to Dayflow, ${formData.name}. Logged into your personalized dashboard.`,
         variant: "success",
       });
-      await login(formData.email, formData.role as any);
       router.push("/");
-    }, 600);
+    } catch {
+      setIsLoading(false);
+      setError("Failed to create account. Please try again.");
+    }
   };
 
   return (

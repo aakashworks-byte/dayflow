@@ -420,3 +420,76 @@ export const INITIAL_ACTIVITY_FEED: ActivityFeedItem[] = [
     type: 'PAYROLL',
   },
 ];
+
+export function generateMonthAttendance(): AttendanceRecord[] {
+  const records: AttendanceRecord[] = [];
+  const daysInMonth = 31; // July 2026
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dayStr = day < 10 ? `0${day}` : `${day}`;
+    const dateStr = `2026-07-${dayStr}`;
+    const dateObj = new Date(2026, 6, day);
+    const dayOfWeek = dateObj.getDay(); // 0 = Sun, 6 = Sat
+
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      records.push({
+        id: `att-2026-07-${dayStr}`,
+        employee_id: "e0000001-0000-0000-0000-000000000001",
+        employee_name: "Dhruv Singh",
+        employee_code: "EMP-001",
+        date: dateStr,
+        check_in: "-",
+        check_out: "-",
+        status: "WEEKEND" as any,
+        total_hours: 0,
+        location: "Bengaluru",
+        device: "-",
+      });
+    } else if (day === 24) {
+      records.push({
+        id: `att-2026-07-${dayStr}`,
+        employee_id: "e0000001-0000-0000-0000-000000000001",
+        employee_name: "Dhruv Singh",
+        employee_code: "EMP-001",
+        date: dateStr,
+        check_in: "09:02 AM",
+        check_out: "06:15 PM",
+        status: "PRESENT",
+        total_hours: 9.2,
+        location: "Bengaluru Office",
+        device: "Web App (MacBook Pro)",
+      });
+    } else if (day > 24) {
+      records.push({
+        id: `att-2026-07-${dayStr}`,
+        employee_id: "e0000001-0000-0000-0000-000000000001",
+        employee_name: "Dhruv Singh",
+        employee_code: "EMP-001",
+        date: dateStr,
+        check_in: "-",
+        check_out: "-",
+        status: "UPCOMING" as any,
+        total_hours: 0,
+        location: "Bengaluru",
+        device: "-",
+      });
+    } else {
+      records.push({
+        id: `att-2026-07-${dayStr}`,
+        employee_id: "e0000001-0000-0000-0000-000000000001",
+        employee_name: "Dhruv Singh",
+        employee_code: "EMP-001",
+        date: dateStr,
+        check_in: "09:00 AM",
+        check_out: "06:00 PM",
+        status: "PRESENT",
+        total_hours: 9.0,
+        location: "Bengaluru Office",
+        device: "Web App",
+      });
+    }
+  }
+
+  return records;
+}
+

@@ -274,6 +274,12 @@ export function Navbar({ onOpenSearch }: NavbarProps) {
                 <span>Attendance</span>
               </Link>
             </DropdownMenuItem>
+            <DropdownMenuItem asChild className="cursor-pointer">
+              <Link href="/calendar" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                <span>Work Calendar</span>
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={logout}

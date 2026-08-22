@@ -69,6 +69,13 @@ export function Sidebar() {
       badgeColor: "purple",
     },
     {
+      title: "Workforce Calendar",
+      href: "/calendar",
+      icon: Sparkles,
+      badge: "2026",
+      badgeColor: "purple",
+    },
+    {
       title: "Payroll & Salary",
       href: "/payroll",
       icon: CreditCard,

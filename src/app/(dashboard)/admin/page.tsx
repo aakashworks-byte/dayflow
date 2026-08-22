@@ -132,13 +132,13 @@ export default function AdminDashboardPage() {
 
         <div className="flex items-center gap-2.5">
           <Button asChild variant="outline" className="rounded-xl text-xs sm:text-sm font-semibold gap-2">
-            <Link href="/leaves">
+            <Link href="/leaves" prefetch={true}>
               <BrainCircuit className="h-4 w-4 text-purple-600" />
               Policy Engine
             </Link>
           </Button>
           <Button asChild variant="purple" className="rounded-xl text-xs sm:text-sm font-semibold gap-2 shadow-md">
-            <Link href="/profile">
+            <Link href="/profile" prefetch={true}>
               <Sparkles className="h-4 w-4" />
               Admin Profile
             </Link>
@@ -378,7 +378,7 @@ export default function AdminDashboardPage() {
                         variant="outline"
                         className="h-7 text-xs rounded-lg gap-1 border-purple-500/30 text-purple-600 dark:text-purple-400"
                       >
-                        <Link href="/profile">
+                        <Link href="/profile" prefetch={true}>
                           <Eye className="h-3 w-3" />
                           View
                         </Link>

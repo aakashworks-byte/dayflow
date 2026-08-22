@@ -291,27 +291,27 @@ export function Navbar() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild className="cursor-pointer">
-              <Link href="/profile" className="flex items-center gap-2">
+              <Link href="/profile" prefetch={true} className="flex items-center gap-2">
                 <User className="h-4 w-4" />
                 <span>My Profile</span>
               </Link>
             </DropdownMenuItem>
             {isHrAdmin && (
               <DropdownMenuItem asChild className="cursor-pointer">
-                <Link href="/admin" className="flex items-center gap-2">
+                <Link href="/admin" prefetch={true} className="flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                   <span>Admin Hub</span>
                 </Link>
               </DropdownMenuItem>
             )}
             <DropdownMenuItem asChild className="cursor-pointer">
-              <Link href="/attendance" className="flex items-center gap-2">
+              <Link href="/attendance" prefetch={true} className="flex items-center gap-2">
                 <Building2 className="h-4 w-4" />
                 <span>Attendance Tracker</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild className="cursor-pointer">
-              <Link href="/calendar" className="flex items-center gap-2">
+              <Link href="/calendar" prefetch={true} className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                 <span>Work Calendar</span>
               </Link>
@@ -349,6 +349,7 @@ export function Navbar() {
                   <Link
                     key={idx}
                     href={item.href}
+                    prefetch={true}
                     onClick={() => setSearchOpen(false)}
                     className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/60 transition-colors text-xs"
                   >

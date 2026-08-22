@@ -26,6 +26,7 @@ export interface AuthContext {
  * Helper to construct AuthContext from Supabase session.
  * Uses database functions (auth_org_id, auth_employee_id) for authoritative data.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function buildAuthContext(supabase: any): Promise<AuthContext> {
   // Fetch user id from JWT – Supabase client already validates it.
   const { data: { user } } = await supabase.auth.getUser();

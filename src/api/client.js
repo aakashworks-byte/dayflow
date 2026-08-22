@@ -3,7 +3,7 @@
 //   1. VITE_API_BASE_URL in your .env file
 //   2. the endpoint paths below, if their routes differ
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api'
 
 async function request(path, options = {}) {
   const token = localStorage.getItem('auth_token')

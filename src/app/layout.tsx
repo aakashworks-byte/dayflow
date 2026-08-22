@@ -31,6 +31,39 @@ export default function RootLayout({
             __html: `
               (function() {
                 try {
+                  // 1. Intercept uncaught errors from chrome extensions in capture phase
+                  window.addEventListener('error', function(event) {
+                    var isExtension = false;
+                    if (event.filename && (event.filename.indexOf('chrome-extension://') !== -1 || event.filename.indexOf('moz-extension://') !== -1)) {
+                      isExtension = true;
+                    }
+                    if (event.error && event.error.stack && (event.error.stack.indexOf('chrome-extension://') !== -1 || event.error.stack.indexOf('moz-extension://') !== -1)) {
+                      isExtension = true;
+                    }
+                    if (event.message && (event.message.indexOf('M_ID') !== -1 || event.message.indexOf('bis_skin_checked') !== -1)) {
+                      isExtension = true;
+                    }
+                    if (isExtension) {
+                      event.stopImmediatePropagation();
+                      event.preventDefault();
+                      return true;
+                    }
+                  }, true);
+
+                  // 2. Intercept unhandled promise rejections from chrome extensions
+                  window.addEventListener('unhandledrejection', function(event) {
+                    var reasonStr = event.reason ? (event.reason.stack || event.reason.message || String(event.reason)) : '';
+                    if (
+                      reasonStr.indexOf('chrome-extension://') !== -1 ||
+                      reasonStr.indexOf('moz-extension://') !== -1 ||
+                      reasonStr.indexOf('M_ID') !== -1
+                    ) {
+                      event.stopImmediatePropagation();
+                      event.preventDefault();
+                    }
+                  }, true);
+
+                  // 3. Intercept console.error noise from extensions
                   var origErr = console.error;
                   console.error = function() {
                     var str = '';
@@ -40,7 +73,9 @@ export default function RootLayout({
                     if (
                       str.indexOf('bis_skin_checked') !== -1 ||
                       str.indexOf('__processed_') !== -1 ||
-                      str.indexOf('bis_register') !== -1
+                      str.indexOf('bis_register') !== -1 ||
+                      str.indexOf('chrome-extension://') !== -1 ||
+                      str.indexOf('M_ID') !== -1
                     ) {
                       return;
                     }

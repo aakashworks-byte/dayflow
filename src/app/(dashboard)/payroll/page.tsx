@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
   CreditCard,
   Download,
@@ -39,33 +39,43 @@ import {
 import { formatINR, formatDate } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { Payslip } from "@/types/hrms";
+import { generatePayslipPDF } from "@/lib/pdf-generator";
 
 export default function PayrollPage() {
-  const { user, isHrAdmin } = useAuth();
+  const { user } = useAuth();
   const { payslips } = useHRMS();
   const { toast } = useToast();
 
   const [selectedPayslip, setSelectedPayslip] = useState<Payslip | null>(payslips[0]);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-  const printableSlipRef = useRef<HTMLDivElement>(null);
+  const [showSlipModal, setShowSlipModal] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const salary = user?.salary_structure || payslips[0].structure;
 
-  // Handle PDF Generation / Print trigger
-  const handleDownloadPdf = async (slip: Payslip) => {
+  // Direct PDF Download Handler
+  const handleDownloadDirectPDF = (slip: Payslip) => {
+    setIsDownloading(true);
+    try {
+      generatePayslipPDF(slip, user);
+      toast({
+        title: "Salary Slip Downloaded! 📄",
+        description: `Official PDF for ${slip.month} has been saved to your downloads.`,
+        variant: "purple",
+      });
+    } catch (err) {
+      toast({
+        title: "Download Failed",
+        description: "Please try again or use the print option.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleOpenPreview = (slip: Payslip) => {
     setSelectedPayslip(slip);
-    setIsGeneratingPdf(true);
-
-    toast({
-      title: "Generating Official Salary Slip PDF 📄",
-      description: `Payslip for ${slip.month} is being generated and formatted...`,
-      variant: "purple",
-    });
-
-    setTimeout(() => {
-      setIsGeneratingPdf(false);
-      window.print();
-    }, 500);
+    setShowSlipModal(true);
   };
 
   return (
@@ -77,26 +87,37 @@ export default function PayrollPage() {
             <Badge variant="purple" className="text-xs px-2 py-0.5 font-semibold">
               Compensation & Benefits
             </Badge>
-            <span className="text-xs text-muted-foreground">Currency: INR (₹)</span>
+            <span className="text-xs text-muted-foreground font-medium">Currency: Indian Rupee (₹ INR)</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground mt-1 flex items-center gap-2">
-            Payroll & Salary Management
+            Payroll & Salary Structure
             <CreditCard className="h-6 w-6 text-purple-600 dark:text-purple-400" />
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-            Inspect monthly compensation structure, tax deductions, and download official payslips.
+            Inspect your monthly earnings, statutory tax deductions, and download official payslips.
           </p>
         </div>
 
-        <Button
-          onClick={() => handleDownloadPdf(payslips[0])}
-          variant="purple"
-          className="rounded-xl text-xs sm:text-sm font-semibold gap-2 shadow-md"
-          disabled={isGeneratingPdf}
-        >
-          <Download className="h-4 w-4" />
-          {isGeneratingPdf ? "Generating..." : "Download Latest Slip (PDF)"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => handleOpenPreview(payslips[0])}
+            variant="outline"
+            className="rounded-xl text-xs sm:text-sm font-semibold gap-2 border-purple-500/30 text-purple-600 dark:text-purple-400"
+          >
+            <Eye className="h-4 w-4" />
+            View Payslip
+          </Button>
+
+          <Button
+            onClick={() => handleDownloadDirectPDF(payslips[0])}
+            variant="purple"
+            className="rounded-xl text-xs sm:text-sm font-semibold gap-2 shadow-md"
+            disabled={isDownloading}
+          >
+            <Download className="h-4 w-4" />
+            {isDownloading ? "Generating..." : "Download Salary Slip (PDF)"}
+          </Button>
+        </div>
       </div>
 
       {/* Salary Structure Main Highlight Card */}
@@ -110,7 +131,7 @@ export default function PayrollPage() {
                 Monthly CTC Structure Breakdown
               </CardTitle>
               <CardDescription className="text-xs">
-                Detailed earnings and statutory tax deductions for {user?.display_name || "Employee"}
+                Detailed earnings and statutory tax deductions for {user?.display_name || "Employee"} ({user?.employee_code || "EMP"})
               </CardDescription>
             </div>
             <Badge variant="success" className="text-xs">
@@ -129,19 +150,30 @@ export default function PayrollPage() {
                   {formatINR(salary.net_salary)}
                 </div>
                 <span className="text-[11px] text-muted-foreground mt-0.5 block">
-                  Processed into HDFC Bank (•••• 8842) on 31st of each month
+                  Disbursed into HDFC Bank (•••• 8842) on 31st of each month
                 </span>
               </div>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleDownloadPdf(payslips[0])}
-                className="h-9 px-4 rounded-xl text-xs gap-1.5 border-purple-500/30 text-purple-600 dark:text-purple-400 font-semibold"
-              >
-                <Printer className="h-3.5 w-3.5" />
-                Print / Download Slip
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="purple"
+                  size="sm"
+                  onClick={() => handleDownloadDirectPDF(payslips[0])}
+                  className="h-9 px-4 rounded-xl text-xs gap-1.5 font-semibold shadow-sm"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Download PDF
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleOpenPreview(payslips[0])}
+                  className="h-9 px-3 rounded-xl text-xs gap-1.5 border-purple-500/30 text-purple-600 dark:text-purple-400"
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  Preview
+                </Button>
+              </div>
             </div>
 
             {/* Side by side: Earnings vs Deductions */}
@@ -273,7 +305,7 @@ export default function PayrollPage() {
                 <TableHead>Deductions</TableHead>
                 <TableHead>Net Pay</TableHead>
                 <TableHead>Disbursed On</TableHead>
-                <TableHead className="text-right">Payslip PDF</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -299,15 +331,26 @@ export default function PayrollPage() {
                     {slip.payment_date}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleDownloadPdf(slip)}
-                      className="h-7 text-xs rounded-lg gap-1 border-purple-500/30 text-purple-600 dark:text-purple-400 font-semibold"
-                    >
-                      <Download className="h-3 w-3" />
-                      Download PDF
-                    </Button>
+                    <div className="flex items-center justify-end gap-1.5">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleOpenPreview(slip)}
+                        className="h-7 text-xs rounded-lg gap-1 text-purple-600 dark:text-purple-400"
+                      >
+                        <Eye className="h-3 w-3" />
+                        View
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="purple"
+                        onClick={() => handleDownloadDirectPDF(slip)}
+                        className="h-7 text-xs rounded-lg gap-1 font-semibold shadow-sm"
+                      >
+                        <Download className="h-3 w-3" />
+                        PDF
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -316,101 +359,106 @@ export default function PayrollPage() {
         </CardContent>
       </Card>
 
-      {/* Printable / Viewable Salary Slip Template */}
-      <div id="printable-slip" ref={printableSlipRef} className="hidden print:block p-8 bg-white text-black">
-        {selectedPayslip && (
-          <div className="max-w-3xl mx-auto border border-gray-300 p-8 space-y-6 font-sans">
-            {/* Header */}
-            <div className="flex items-center justify-between border-b pb-4">
-              <div>
-                <h1 className="text-2xl font-bold text-purple-900">ACME CORPORATION</h1>
-                <p className="text-xs text-gray-600">Outer Ring Road, Bellandur, Bengaluru, Karnataka - 560103</p>
-                <p className="text-xs text-gray-600">CIN: U72200KA2023PTC112233 • hr@dayflow.io</p>
+      {/* On-Screen Interactive Salary Slip Preview Modal */}
+      {showSlipModal && selectedPayslip && (
+        <Dialog open={showSlipModal} onOpenChange={setShowSlipModal}>
+          <DialogContent className="max-w-2xl glass-panel p-6">
+            <DialogHeader className="border-b pb-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <DialogTitle className="text-lg font-bold text-purple-900 dark:text-purple-300">
+                    ACME CORPORATION - SALARY SLIP
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-muted-foreground">
+                    Pay Period: {selectedPayslip.month} • Disbursed: {selectedPayslip.payment_date}
+                  </DialogDescription>
+                </div>
+                <Badge variant="purple" className="text-xs">
+                  {selectedPayslip.month}
+                </Badge>
               </div>
-              <div className="text-right">
-                <span className="text-xs font-bold uppercase tracking-wider bg-gray-100 px-3 py-1 rounded">
-                  PAYSLIP - {selectedPayslip.month.toUpperCase()}
-                </span>
+            </DialogHeader>
+
+            <div className="space-y-4 text-xs py-2">
+              {/* Employee Summary Grid */}
+              <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-muted/50 border border-border/60">
+                <div className="space-y-1">
+                  <p><strong>Employee:</strong> {user?.display_name || selectedPayslip.employee_name}</p>
+                  <p><strong>ID:</strong> {user?.employee_code || selectedPayslip.employee_code}</p>
+                  <p><strong>Designation:</strong> {user?.job_title || selectedPayslip.designation}</p>
+                  <p><strong>Department:</strong> {user?.department_name || selectedPayslip.department_name}</p>
+                </div>
+                <div className="space-y-1">
+                  <p><strong>Bank Account:</strong> {selectedPayslip.account_number_masked}</p>
+                  <p><strong>PAN:</strong> {selectedPayslip.pan_masked}</p>
+                  <p><strong>UAN:</strong> {selectedPayslip.uan_number}</p>
+                  <p><strong>Working Days:</strong> {selectedPayslip.working_days} Days</p>
+                </div>
+              </div>
+
+              {/* Earnings & Deductions Breakdown */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 space-y-1.5">
+                  <span className="font-bold text-emerald-700 dark:text-emerald-300 text-[11px] block border-b border-emerald-500/20 pb-1">
+                    EARNINGS (+)
+                  </span>
+                  <div className="flex justify-between"><span>Basic Pay:</span><span className="font-semibold">{formatINR(salary.basic)}</span></div>
+                  <div className="flex justify-between"><span>HRA:</span><span className="font-semibold">{formatINR(salary.hra)}</span></div>
+                  <div className="flex justify-between"><span>Special Allowance:</span><span className="font-semibold">{formatINR(salary.special_allowance)}</span></div>
+                  <div className="flex justify-between"><span>Conveyance:</span><span className="font-semibold">{formatINR(salary.conveyance_allowance)}</span></div>
+                  <div className="flex justify-between"><span>Medical:</span><span className="font-semibold">{formatINR(salary.medical_allowance)}</span></div>
+                  <div className="flex justify-between pt-1 border-t font-bold"><span>Total Gross:</span><span>{formatINR(salary.gross_earnings)}</span></div>
+                </div>
+
+                <div className="p-3 rounded-xl border border-red-500/20 bg-red-500/5 space-y-1.5">
+                  <span className="font-bold text-red-700 dark:text-red-300 text-[11px] block border-b border-red-500/20 pb-1">
+                    DEDUCTIONS (-)
+                  </span>
+                  <div className="flex justify-between"><span>Provident Fund (PF):</span><span className="font-semibold">{formatINR(salary.provident_fund)}</span></div>
+                  <div className="flex justify-between"><span>Professional Tax:</span><span className="font-semibold">{formatINR(salary.professional_tax)}</span></div>
+                  <div className="flex justify-between"><span>Income Tax (TDS):</span><span className="font-semibold">{formatINR(salary.income_tax_tds)}</span></div>
+                  <div className="flex justify-between"><span>Other Deductions:</span><span className="font-semibold">₹0</span></div>
+                  <div className="flex justify-between pt-1 border-t font-bold"><span>Total Deductions:</span><span>{formatINR(salary.total_deductions)}</span></div>
+                </div>
+              </div>
+
+              {/* Net Pay */}
+              <div className="p-4 rounded-2xl border border-purple-500/30 bg-purple-500/10 flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider">
+                    NET TAKE-HOME SALARY
+                  </span>
+                  <div className="text-2xl font-black text-foreground">{formatINR(salary.net_salary)}</div>
+                </div>
+                <span className="text-[10px] text-muted-foreground italic">System-generated official payslip</span>
               </div>
             </div>
 
-            {/* Employee Details Grid */}
-            <div className="grid grid-cols-2 gap-4 text-xs border-b pb-4">
-              <div>
-                <p><strong>Employee Name:</strong> {user?.display_name || selectedPayslip.employee_name}</p>
-                <p><strong>Employee ID:</strong> {user?.employee_code || selectedPayslip.employee_code}</p>
-                <p><strong>Designation:</strong> {user?.job_title || selectedPayslip.designation}</p>
-                <p><strong>Department:</strong> {user?.department_name || selectedPayslip.department_name}</p>
-              </div>
-              <div>
-                <p><strong>Bank Account:</strong> {selectedPayslip.account_number_masked}</p>
-                <p><strong>PAN:</strong> {selectedPayslip.pan_masked}</p>
-                <p><strong>UAN:</strong> {selectedPayslip.uan_number}</p>
-                <p><strong>Payment Date:</strong> {selectedPayslip.payment_date}</p>
-              </div>
-            </div>
-
-            {/* Earnings & Deductions Table */}
-            <table className="w-full text-xs border border-gray-300">
-              <thead className="bg-gray-100 border-b">
-                <tr>
-                  <th className="p-2 text-left border-r">Earnings</th>
-                  <th className="p-2 text-right border-r">Amount (₹)</th>
-                  <th className="p-2 text-left border-r">Deductions</th>
-                  <th className="p-2 text-right">Amount (₹)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                <tr>
-                  <td className="p-2 border-r">Basic Pay</td>
-                  <td className="p-2 text-right border-r">{formatINR(selectedPayslip.structure.basic)}</td>
-                  <td className="p-2 border-r">Provident Fund (PF)</td>
-                  <td className="p-2 text-right">{formatINR(selectedPayslip.structure.provident_fund)}</td>
-                </tr>
-                <tr>
-                  <td className="p-2 border-r">House Rent Allowance (HRA)</td>
-                  <td className="p-2 text-right border-r">{formatINR(selectedPayslip.structure.hra)}</td>
-                  <td className="p-2 border-r">Professional Tax (PT)</td>
-                  <td className="p-2 text-right">{formatINR(selectedPayslip.structure.professional_tax)}</td>
-                </tr>
-                <tr>
-                  <td className="p-2 border-r">Special Allowance</td>
-                  <td className="p-2 text-right border-r">{formatINR(selectedPayslip.structure.special_allowance)}</td>
-                  <td className="p-2 border-r">Income Tax (TDS)</td>
-                  <td className="p-2 text-right">{formatINR(selectedPayslip.structure.income_tax_tds)}</td>
-                </tr>
-                <tr>
-                  <td className="p-2 border-r">Conveyance Allowance</td>
-                  <td className="p-2 text-right border-r">{formatINR(selectedPayslip.structure.conveyance_allowance)}</td>
-                  <td className="p-2 border-r">—</td>
-                  <td className="p-2 text-right">—</td>
-                </tr>
-                <tr>
-                  <td className="p-2 border-r">Medical Allowance</td>
-                  <td className="p-2 text-right border-r">{formatINR(selectedPayslip.structure.medical_allowance)}</td>
-                  <td className="p-2 border-r">—</td>
-                  <td className="p-2 text-right">—</td>
-                </tr>
-                <tr className="font-bold bg-gray-50 border-t">
-                  <td className="p-2 border-r">Gross Earnings</td>
-                  <td className="p-2 text-right border-r">{formatINR(selectedPayslip.structure.gross_earnings)}</td>
-                  <td className="p-2 border-r">Total Deductions</td>
-                  <td className="p-2 text-right">{formatINR(selectedPayslip.structure.total_deductions)}</td>
-                </tr>
-              </tbody>
-            </table>
-
-            {/* Net Pay Box */}
-            <div className="flex items-center justify-between p-4 bg-purple-50 border border-purple-200 rounded">
-              <div>
-                <p className="text-xs font-semibold text-purple-900">NET TAKE-HOME SALARY</p>
-                <p className="text-xl font-bold text-purple-950">{formatINR(selectedPayslip.structure.net_salary)}</p>
-              </div>
-              <p className="text-[10px] text-gray-500 italic">This is a system generated salary slip and does not require a physical signature.</p>
-            </div>
-          </div>
-        )}
-      </div>
+            <DialogFooter className="gap-2 border-t pt-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSlipModal(false)}
+                className="rounded-xl text-xs"
+              >
+                Close
+              </Button>
+              <Button
+                variant="purple"
+                size="sm"
+                onClick={() => {
+                  handleDownloadDirectPDF(selectedPayslip);
+                  setShowSlipModal(false);
+                }}
+                className="rounded-xl text-xs gap-1.5 font-semibold shadow-md"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Download PDF File (.pdf)
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

@@ -103,7 +103,7 @@ export function Navbar({ onOpenSearch }: NavbarProps) {
 
       {/* Right side controls */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Quick Demo Role Switcher Dropdown */}
+        {/* Quick Role Switcher Dropdown for Dhruv Singh */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -117,31 +117,30 @@ export function Navbar({ onOpenSearch }: NavbarProps) {
               <ChevronDown className="h-3 w-3 opacity-60" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-64 glass-panel">
+          <DropdownMenuContent align="end" className="w-56 glass-panel">
             <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
-              ⚡ Demo Switcher: Test Personas
+              ⚡ Dhruv Singh: Switch View Role
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {availableUsers.map((u) => (
+            {[
+              { role: "SUPER_ADMIN", title: "Super Admin / CEO", desc: "Full executive access" },
+              { role: "HR_ADMIN", title: "HR Administrator", desc: "Manage employees & leaves" },
+              { role: "LINE_MANAGER", title: "Engineering Manager", desc: "Approve team requests" },
+              { role: "EMPLOYEE", title: "Standard Employee", desc: "Self-service workspace" },
+            ].map((item) => (
               <DropdownMenuItem
-                key={u.id}
-                onClick={() => switchUser(u.id)}
+                key={item.role}
+                onClick={() => switchRole(item.role as any)}
                 className={`flex items-center justify-between cursor-pointer py-2 ${
-                  user?.id === u.id ? "bg-purple-500/10 font-semibold text-purple-600 dark:text-purple-400" : ""
+                  role === item.role ? "bg-purple-500/10 font-semibold text-purple-600 dark:text-purple-400" : ""
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-6 w-6">
-                    <AvatarImage src={u.avatar_url} />
-                    <AvatarFallback className="text-[10px]">{u.first_name[0]}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col">
-                    <span className="text-xs">{u.display_name}</span>
-                    <span className="text-[10px] text-muted-foreground leading-none">{u.job_title}</span>
-                  </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium">{item.title}</span>
+                  <span className="text-[10px] text-muted-foreground">{item.desc}</span>
                 </div>
-                <Badge variant={getRoleBadgeVariant(u.role) as any} className="text-[9px] px-1.5 py-0">
-                  {u.role}
+                <Badge variant={getRoleBadgeVariant(item.role) as any} className="text-[9px] px-1.5 py-0">
+                  {item.role === "SUPER_ADMIN" ? "CEO" : item.role === "HR_ADMIN" ? "HR" : item.role === "LINE_MANAGER" ? "Mgr" : "Emp"}
                 </Badge>
               </DropdownMenuItem>
             ))}

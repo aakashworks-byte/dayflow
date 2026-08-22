@@ -14,6 +14,7 @@ import {
   Layers,
   Eye,
   EyeOff,
+  CheckCircle2,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
@@ -21,13 +22,14 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function LoginPage() {
   const router = useRouter();
   const { login, availableUsers, switchUser } = useAuth();
   const { toast } = useToast();
 
-  const [email, setEmail] = useState("engineer@dayflow.io");
+  const [email, setEmail] = useState("dhruv.singh@dayflow.io");
   const [password, setPassword] = useState("Password123!");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -49,8 +51,8 @@ export default function LoginPage() {
 
     if (res.success) {
       toast({
-        title: "Welcome back!",
-        description: "Successfully signed into Dayflow HRMS.",
+        title: "Welcome back, Dhruv! ✨",
+        description: "Successfully signed into Dayflow HRMS workspace.",
         variant: "success",
       });
       router.push("/");
@@ -59,17 +61,25 @@ export default function LoginPage() {
     }
   };
 
-  const handleQuickLogin = async (user: any) => {
-    setEmail(user.work_email);
+  const handleQuickLogin = async (targetUser: any) => {
+    setEmail(targetUser.work_email);
     setPassword("Password123!");
     setIsLoading(true);
-    switchUser(user.id);
+    switchUser(targetUser.id);
     toast({
-      title: `Logged in as ${user.display_name}`,
-      description: `Active Role: ${user.role}`,
+      title: `Logged in as ${targetUser.display_name} ✨`,
+      description: `Active Role: ${targetUser.role}`,
       variant: "purple",
     });
-    router.push(user.role === "HR_ADMIN" || user.role === "SUPER_ADMIN" ? "/admin" : "/");
+    router.push("/");
+  };
+
+  const primaryUser = availableUsers[0] || {
+    display_name: "Dhruv Singh",
+    work_email: "dhruv.singh@dayflow.io",
+    job_title: "Lead Software Architect & Tech Lead",
+    role: "SUPER_ADMIN",
+    avatar_url: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80",
   };
 
   return (
@@ -87,65 +97,47 @@ export default function LoginPage() {
       </CardHeader>
 
       <CardContent className="px-6 sm:px-8 space-y-5">
-        {/* Quick Persona Demo Selector */}
-        <div className="rounded-2xl border border-purple-500/30 bg-purple-500/5 p-3.5 space-y-2">
+        {/* 1-Click Fast Login for Dhruv Singh */}
+        <div className="rounded-2xl border border-purple-500/30 bg-gradient-to-r from-purple-500/10 via-purple-500/5 to-transparent p-4 space-y-2.5">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
-              <Layers className="h-3.5 w-3.5" />
-              1-Click Demo Login
+            <span className="text-xs font-bold text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5" />
+              1-Click Fast Sign In
             </span>
             <Badge variant="purple" className="text-[9px] px-1.5 py-0">
-              Hackathon Ready
+              Verified Workspace
             </Badge>
           </div>
-          <div className="grid grid-cols-2 gap-2 pt-1">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => handleQuickLogin(availableUsers[0])}
-              className="h-auto py-2 px-2.5 flex flex-col items-start text-left border-border/60 hover:border-purple-500 hover:bg-purple-500/10 rounded-xl"
-            >
-              <span className="text-xs font-semibold text-foreground">David Chen</span>
-              <span className="text-[10px] text-muted-foreground">Employee (Engineer)</span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => handleQuickLogin(availableUsers[1])}
-              className="h-auto py-2 px-2.5 flex flex-col items-start text-left border-border/60 hover:border-orange-500 hover:bg-orange-500/10 rounded-xl"
-            >
-              <span className="text-xs font-semibold text-foreground">Elena Rostova</span>
-              <span className="text-[10px] text-muted-foreground">HR Director / Admin</span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => handleQuickLogin(availableUsers[2])}
-              className="h-auto py-2 px-2.5 flex flex-col items-start text-left border-border/60 hover:border-purple-500 hover:bg-purple-500/10 rounded-xl"
-            >
-              <span className="text-xs font-semibold text-foreground">Sarah Connor</span>
-              <span className="text-[10px] text-muted-foreground">VP Eng / Manager</span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => handleQuickLogin(availableUsers[3])}
-              className="h-auto py-2 px-2.5 flex flex-col items-start text-left border-border/60 hover:border-purple-500 hover:bg-purple-500/10 rounded-xl"
-            >
-              <span className="text-xs font-semibold text-foreground">Alex Vance</span>
-              <span className="text-[10px] text-muted-foreground">CEO & Super Admin</span>
-            </Button>
-          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handleQuickLogin(primaryUser)}
+            className="w-full h-auto py-3 px-3 flex items-center justify-between border-purple-500/40 hover:border-purple-500 hover:bg-purple-500/10 rounded-2xl transition-all shadow-sm"
+          >
+            <div className="flex items-center gap-3 text-left">
+              <Avatar className="h-9 w-9 ring-2 ring-purple-500/30">
+                <AvatarImage src={primaryUser.avatar_url} />
+                <AvatarFallback>DS</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  {primaryUser.display_name}
+                  <CheckCircle2 className="h-3.5 w-3.5 text-purple-600 fill-purple-600/20" />
+                </span>
+                <span className="text-[10px] text-muted-foreground">{primaryUser.work_email} • {primaryUser.job_title}</span>
+              </div>
+            </div>
+            <Badge variant="purple" className="text-[9px]">
+              Admin / CEO
+            </Badge>
+          </Button>
         </div>
 
         <div className="relative flex items-center justify-center text-xs uppercase text-muted-foreground">
           <span className="h-px w-full bg-border" />
           <span className="bg-card px-3 text-[10px] tracking-wider font-semibold">
-            Or Sign In With Email
+            Or Sign In Manually
           </span>
           <span className="h-px w-full bg-border" />
         </div>
@@ -164,7 +156,7 @@ export default function LoginPage() {
               <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 type="email"
-                placeholder="name@company.com"
+                placeholder="dhruv.singh@dayflow.io"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="pl-9 h-10 rounded-xl"
@@ -180,7 +172,7 @@ export default function LoginPage() {
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  toast({ title: "Demo Mode", description: "Default password is Password123!" });
+                  toast({ title: "Demo Credentials", description: "Default password is Password123!" });
                 }}
                 className="text-[11px] text-purple-600 dark:text-purple-400 hover:underline"
               >
@@ -221,13 +213,7 @@ export default function LoginPage() {
 
       <CardFooter className="flex flex-col gap-3 border-t border-border/60 bg-muted/20 px-6 py-4 text-center">
         <p className="text-xs text-muted-foreground">
-          Don't have an account?{" "}
-          <Link
-            href="/signup"
-            className="font-semibold text-purple-600 dark:text-purple-400 hover:underline"
-          >
-            Onboard New Employee
-          </Link>
+          Welcome back to Dayflow HRMS • All systems active
         </p>
       </CardFooter>
     </Card>

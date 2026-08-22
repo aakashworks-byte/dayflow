@@ -46,7 +46,7 @@ import {
 } from "@/components/ui/dialog";
 
 export default function ProfilePage() {
-  const { user, availableUsers, switchUser, updateUser } = useAuth();
+  const { user, switchRole, updateUser } = useAuth();
   const { selectedEmployee, setSelectedEmployee, updateEmployeeProfile, uploadDocument } = useHRMS();
   const { toast } = useToast();
 
@@ -57,30 +57,30 @@ export default function ProfilePage() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    first_name: activeEmployee?.first_name || "David",
-    last_name: activeEmployee?.last_name || "Chen",
-    job_title: activeEmployee?.job_title || "Senior Backend Engineer",
-    department_name: activeEmployee?.department_name || "Engineering",
+    first_name: activeEmployee?.first_name || "Dhruv",
+    last_name: activeEmployee?.last_name || "Singh",
+    job_title: activeEmployee?.job_title || "Lead Software Architect & Tech Lead",
+    department_name: activeEmployee?.department_name || "Core Platform Engineering",
     phone: activeEmployee?.phone || "+91 98765 43210",
-    personal_email: activeEmployee?.personal_email || "david.chen.dev@gmail.com",
+    personal_email: activeEmployee?.personal_email || "dhruvsingh.dev@gmail.com",
     address: activeEmployee?.address || "Flat 402, Green Glen Layout, Bellandur, Bengaluru, Karnataka - 560103",
-    bio: activeEmployee?.bio || "Distributed systems architect & backend engineer specializing in high-throughput microservices, PostgreSQL optimizations, and real-time event-driven infrastructure.",
-    avatar_url: activeEmployee?.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
+    bio: activeEmployee?.bio || "Lead software architect & full-stack engineer driving Dayflow HRMS enterprise platform, distributed cloud microservices, and next-generation developer tooling.",
+    avatar_url: activeEmployee?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80",
   });
 
   // Keep formData in sync when activeEmployee changes
   useEffect(() => {
     if (activeEmployee) {
       setFormData({
-        first_name: activeEmployee.first_name || "",
-        last_name: activeEmployee.last_name || "",
-        job_title: activeEmployee.job_title || "",
-        department_name: activeEmployee.department_name || "",
+        first_name: activeEmployee.first_name || "Dhruv",
+        last_name: activeEmployee.last_name || "Singh",
+        job_title: activeEmployee.job_title || "Lead Software Architect & Tech Lead",
+        department_name: activeEmployee.department_name || "Core Platform Engineering",
         phone: activeEmployee.phone || "+91 98765 43210",
-        personal_email: activeEmployee.personal_email || "",
-        address: activeEmployee.address || "",
-        bio: activeEmployee.bio || "",
-        avatar_url: activeEmployee.avatar_url || "",
+        personal_email: activeEmployee.personal_email || "dhruvsingh.dev@gmail.com",
+        address: activeEmployee.address || "Flat 402, Green Glen Layout, Bellandur, Bengaluru, Karnataka - 560103",
+        bio: activeEmployee.bio || "Lead software architect & full-stack engineer driving Dayflow HRMS enterprise platform, distributed cloud microservices, and next-generation developer tooling.",
+        avatar_url: activeEmployee.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80",
       });
     }
   }, [activeEmployee]);
@@ -94,8 +94,6 @@ export default function ProfilePage() {
   if (!activeEmployee) {
     return <div className="p-8 text-center text-muted-foreground">Loading profile...</div>;
   }
-
-  const isSelf = user?.id === activeEmployee.id;
 
   const handleSaveProfile = () => {
     const displayName = `${formData.first_name} ${formData.last_name}`.trim();
@@ -140,17 +138,17 @@ export default function ProfilePage() {
   };
 
   const salary = activeEmployee.salary_structure || {
-    basic: 95000,
-    hra: 38000,
-    special_allowance: 25000,
-    conveyance_allowance: 8000,
-    medical_allowance: 5000,
-    gross_earnings: 171000,
-    provident_fund: 11400,
+    basic: 120000,
+    hra: 48000,
+    special_allowance: 32000,
+    conveyance_allowance: 10000,
+    medical_allowance: 6000,
+    gross_earnings: 216000,
+    provident_fund: 14400,
     professional_tax: 200,
-    income_tax_tds: 14400,
-    total_deductions: 26000,
-    net_salary: 145000,
+    income_tax_tds: 21400,
+    total_deductions: 36000,
+    net_salary: 180000,
     currency: "INR",
   };
 
@@ -165,79 +163,55 @@ export default function ProfilePage() {
         className="hidden"
       />
 
-      {/* Top Banner & Quick Persona Switcher Bar */}
+      {/* Top Banner & Quick Role Mode Switcher for Dhruv Singh */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-3xl border border-purple-500/20 bg-gradient-to-r from-purple-950/30 via-background to-orange-500/10 backdrop-blur-xl">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-purple-600/20 text-purple-600 dark:text-purple-400">
-            <Users className="h-5 w-5" />
+            <Sparkles className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-xs sm:text-sm font-bold text-foreground">Switch Active Employee Profile</h3>
-            <p className="text-[11px] text-muted-foreground">Select any coworker persona to inspect or edit their profile</p>
+            <h3 className="text-xs sm:text-sm font-bold text-foreground">Active Profile: Dhruv Singh</h3>
+            <p className="text-[11px] text-muted-foreground">Lead Architect & System Administrator (EMP-001)</p>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
-          {availableUsers.map((u) => {
-            const isSelected = activeEmployee.id === u.id;
+          <span className="text-xs font-semibold text-muted-foreground mr-1">Switch View Role:</span>
+          {(["SUPER_ADMIN", "HR_ADMIN", "LINE_MANAGER", "EMPLOYEE"] as const).map((r) => {
+            const isCurrent = user?.role === r;
             return (
               <Button
-                key={u.id}
+                key={r}
                 size="sm"
-                variant={isSelected ? "purple" : "outline"}
+                variant={isCurrent ? "purple" : "outline"}
                 onClick={() => {
-                  setSelectedEmployee(null);
-                  switchUser(u.id);
+                  switchRole(r);
                   toast({
-                    title: `Switched to ${u.display_name}`,
-                    description: `Active role: ${u.role.replace("_", " ")}`,
+                    title: `Role switched to ${r.replace("_", " ")}`,
+                    description: `Dhruv Singh workspace view updated.`,
                     variant: "purple",
                   });
                 }}
-                className={`h-8 text-xs rounded-xl gap-1.5 font-medium transition-all ${
-                  isSelected ? "shadow-md ring-2 ring-purple-500/40" : "border-border/60 hover:bg-muted"
+                className={`h-7 text-[11px] rounded-xl px-2.5 font-medium transition-all ${
+                  isCurrent ? "shadow-md" : "border-border/60 hover:bg-muted"
                 }`}
               >
-                <Avatar className="h-4 w-4 rounded-full">
-                  <AvatarImage src={u.avatar_url} />
-                  <AvatarFallback>{u.first_name[0]}</AvatarFallback>
-                </Avatar>
-                <span>{u.first_name}</span>
-                <span className="text-[10px] opacity-70">({u.role === "SUPER_ADMIN" ? "CEO" : u.role === "HR_ADMIN" ? "HR" : u.role === "LINE_MANAGER" ? "Mgr" : "Eng"})</span>
+                {r === "SUPER_ADMIN" ? "CEO / Admin" : r === "HR_ADMIN" ? "HR Admin" : r === "LINE_MANAGER" ? "Manager" : "Employee"}
               </Button>
             );
           })}
         </div>
       </div>
 
-      {/* Return to own profile banner if viewing someone else */}
-      {!isSelf && (
-        <div className="flex items-center justify-between p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/30">
-          <div className="flex items-center gap-2 text-xs font-semibold text-purple-700 dark:text-purple-300">
-            <Eye className="h-4 w-4" />
-            <span>Viewing Employee Record: {activeEmployee.display_name} ({activeEmployee.employee_code})</span>
-          </div>
-          <Button
-            size="sm"
-            variant="purple"
-            onClick={() => setSelectedEmployee(null)}
-            className="h-7 text-xs rounded-lg gap-1"
-          >
-            <ArrowLeft className="h-3 w-3" />
-            Back to My Profile
-          </Button>
-        </div>
-      )}
-
-      {/* Main Profile Header Card (Matches Excalidraw Wireframe) */}
+      {/* Main Profile Header Card */}
       <Card className="border border-border/80 shadow-md rounded-3xl overflow-hidden backdrop-blur-xl bg-card/90">
         <div className="h-32 bg-gradient-to-r from-purple-700 via-indigo-600 to-orange-500 relative">
           <div className="absolute top-4 right-4 flex items-center gap-2">
             <Badge variant="purple" className="bg-white/20 text-white border-transparent backdrop-blur-sm">
-              {activeEmployee.employment_type?.replace("_", " ") || "Full Time"}
+              Full Time • Permanent
             </Badge>
             <Badge variant="success" className="backdrop-blur-sm">
-              {activeEmployee.employment_status || "Active"}
+              Active Employee
             </Badge>
           </div>
         </div>
@@ -247,9 +221,9 @@ export default function ProfilePage() {
             {/* Large Circular Avatar with Click-to-Upload Trigger */}
             <div className="relative group">
               <Avatar className="h-28 w-28 sm:h-32 sm:w-32 ring-4 ring-background shadow-2xl rounded-full cursor-pointer overflow-hidden">
-                <AvatarImage src={formData.avatar_url || activeEmployee.avatar_url} alt={activeEmployee.display_name} className="object-cover" />
+                <AvatarImage src={formData.avatar_url || activeEmployee.avatar_url} alt="Dhruv Singh" className="object-cover" />
                 <AvatarFallback className="text-2xl font-bold bg-purple-600 text-white">
-                  {activeEmployee.first_name[0]}
+                  DS
                 </AvatarFallback>
               </Avatar>
 
@@ -341,13 +315,13 @@ export default function ProfilePage() {
             ) : (
               <div>
                 <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
-                  {formData.first_name && formData.last_name ? `${formData.first_name} ${formData.last_name}` : activeEmployee.display_name}
+                  {formData.first_name} {formData.last_name}
                   <Badge variant="purple" className="text-xs font-mono">
-                    {activeEmployee.employee_code}
+                    {activeEmployee.employee_code || "EMP-001"}
                   </Badge>
                 </h2>
                 <p className="text-sm font-medium text-purple-600 dark:text-purple-400 mt-0.5">
-                  {formData.job_title || activeEmployee.job_title}
+                  {formData.job_title}
                 </p>
               </div>
             )}
@@ -357,15 +331,15 @@ export default function ProfilePage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-5 pt-5 border-t border-border/60 text-xs">
             <div className="space-y-0.5">
               <span className="text-muted-foreground text-[11px]">Department</span>
-              <p className="font-semibold text-foreground truncate">{activeEmployee.department_name}</p>
+              <p className="font-semibold text-foreground truncate">{formData.department_name}</p>
             </div>
             <div className="space-y-0.5">
-              <span className="text-muted-foreground text-[11px]">Reporting Manager</span>
-              <p className="font-semibold text-foreground truncate">{activeEmployee.manager_name || "Alex Vance (CEO)"}</p>
+              <span className="text-muted-foreground text-[11px]">Reporting To</span>
+              <p className="font-semibold text-foreground truncate">Board of Directors</p>
             </div>
             <div className="space-y-0.5">
               <span className="text-muted-foreground text-[11px]">Office Location</span>
-              <p className="font-semibold text-foreground truncate">{activeEmployee.location_name?.split(" ")[0] || "Bengaluru"}</p>
+              <p className="font-semibold text-foreground truncate">Bengaluru Hub</p>
             </div>
             <div className="space-y-0.5">
               <span className="text-muted-foreground text-[11px]">Company</span>
@@ -373,21 +347,21 @@ export default function ProfilePage() {
             </div>
             <div className="space-y-0.5">
               <span className="text-muted-foreground text-[11px]">Joining Date</span>
-              <p className="font-semibold text-foreground">{formatDate(activeEmployee.joining_date)}</p>
+              <p className="font-semibold text-foreground">{formatDate("2023-01-01")}</p>
             </div>
             <div className="space-y-0.5">
               <span className="text-muted-foreground text-[11px]">Work Email</span>
-              <p className="font-semibold text-purple-600 dark:text-purple-400 truncate">{activeEmployee.work_email}</p>
+              <p className="font-semibold text-purple-600 dark:text-purple-400 truncate">dhruv.singh@dayflow.io</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Tabs Layout matching Excalidraw Wireframe */}
+      {/* Tabs Layout */}
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="grid w-full grid-cols-3 max-w-md">
           <TabsTrigger value="overview">Overview & Bio</TabsTrigger>
-          <TabsTrigger value="documents">Documents ({activeEmployee.documents?.length || 3})</TabsTrigger>
+          <TabsTrigger value="documents">Documents (3)</TabsTrigger>
           <TabsTrigger value="salary">Salary Structure (₹)</TabsTrigger>
         </TabsList>
 
@@ -475,24 +449,24 @@ export default function ProfilePage() {
               <CardContent className="p-5 pt-2 space-y-3.5 text-xs">
                 <div className="flex items-center justify-between border-b border-border/40 pb-2">
                   <span className="text-muted-foreground">Employee ID:</span>
-                  <span className="font-mono font-bold text-foreground">{activeEmployee.employee_code}</span>
+                  <span className="font-mono font-bold text-foreground">EMP-001</span>
                 </div>
                 <div className="flex items-center justify-between border-b border-border/40 pb-2">
                   <span className="text-muted-foreground">Primary Department:</span>
-                  <span className="font-semibold text-foreground">{activeEmployee.department_name}</span>
+                  <span className="font-semibold text-foreground">Core Platform Engineering</span>
                 </div>
                 <div className="flex items-center justify-between border-b border-border/40 pb-2">
                   <span className="text-muted-foreground">Designation & Band:</span>
-                  <span className="font-semibold text-purple-600 dark:text-purple-400">{formData.job_title || activeEmployee.job_title}</span>
+                  <span className="font-semibold text-purple-600 dark:text-purple-400">{formData.job_title}</span>
                 </div>
                 <div className="flex items-center justify-between border-b border-border/40 pb-2">
                   <span className="text-muted-foreground">Assigned Timezone:</span>
-                  <span className="font-mono text-foreground">{activeEmployee.timezone || "Asia/Kolkata (IST)"}</span>
+                  <span className="font-mono text-foreground">Asia/Kolkata (IST)</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Access Role:</span>
                   <Badge variant="purple" className="text-[10px]">
-                    {activeEmployee.role}
+                    SUPER_ADMIN / HR_ADMIN
                   </Badge>
                 </div>
               </CardContent>
@@ -554,7 +528,7 @@ export default function ProfilePage() {
                   Employee Document Vault
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  Verified HR credentials, tax declarations, and contracts
+                  Verified HR credentials, tax declarations, and contracts for Dhruv Singh
                 </CardDescription>
               </div>
               <Button
@@ -570,7 +544,11 @@ export default function ProfilePage() {
 
             <CardContent className="p-5 pt-0">
               <div className="divide-y divide-border/50">
-                {(activeEmployee.documents || []).map((doc) => (
+                {[
+                  { id: "doc-1", name: "Offer_Letter_Dhruv_Singh.pdf", category: "Offer Letter", size_kb: 420, date: "2023-01-01" },
+                  { id: "doc-2", name: "Aadhaar_Passport_Verification.pdf", category: "ID Proof", size_kb: 890, date: "2023-01-05" },
+                  { id: "doc-3", name: "Form_16_FY2025_26.pdf", category: "Tax Form", size_kb: 340, date: "2026-06-10" },
+                ].map((doc) => (
                   <div
                     key={doc.id}
                     className="py-3.5 flex items-center justify-between hover:bg-muted/30 px-2 rounded-xl transition-colors"
@@ -582,7 +560,7 @@ export default function ProfilePage() {
                       <div>
                         <p className="text-xs font-semibold text-foreground">{doc.name}</p>
                         <p className="text-[10px] text-muted-foreground">
-                          {doc.category} • {doc.size_kb} KB • Uploaded {formatDate(doc.uploaded_at)}
+                          {doc.category} • {doc.size_kb} KB • Uploaded {doc.date}
                         </p>
                       </div>
                     </div>
@@ -611,7 +589,7 @@ export default function ProfilePage() {
           </Card>
         </TabsContent>
 
-        {/* Tab 3: Salary Structure (Read-Only for Employee) */}
+        {/* Tab 3: Salary Structure */}
         <TabsContent value="salary" className="space-y-4 mt-4">
           <Card className="border border-border/70 rounded-2xl shadow-sm">
             <CardHeader className="p-5 pb-3">
@@ -622,7 +600,7 @@ export default function ProfilePage() {
                     Compensation & Salary Structure (INR)
                   </CardTitle>
                   <CardDescription className="text-xs">
-                    Official monthly CTC breakdown (Read-only for employee)
+                    Official monthly CTC breakdown for Dhruv Singh
                   </CardDescription>
                 </div>
                 <Badge variant="purple" className="text-xs">
@@ -642,7 +620,7 @@ export default function ProfilePage() {
                     {formatINR(salary.net_salary)}
                   </div>
                   <span className="text-[11px] text-muted-foreground">
-                    Disbursed directly into registered bank account
+                    Disbursed directly into registered HDFC Bank account
                   </span>
                 </div>
                 <Button asChild variant="purple" size="sm" className="rounded-xl text-xs shadow-md">
